@@ -73,34 +73,35 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
         onClick={onClose}
       >
         <motion.div
-          className="absolute inset-4 md:inset-8 bg-white rounded-3xl shadow-2xl overflow-hidden flex flex-col"
+          className="absolute inset-0 sm:inset-4 lg:inset-8 bg-white sm:rounded-3xl shadow-2xl overflow-hidden flex flex-col"
           initial={{ scale: 0.9, opacity: 0 }}
           animate={{ scale: 1, opacity: 1 }}
           exit={{ scale: 0.9, opacity: 0 }}
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="flex items-center justify-between px-6 py-4 border-b border-gray-200 bg-theo-lavanda-light">
-            <div className="flex items-center gap-3">
-              <div className="w-3 h-3 rounded-full bg-theo-purple animate-pulse" />
-              <h2 className="text-xl font-bold text-gray-900">
-                Modo Live com Theo
+          <div className="flex items-center justify-between px-4 sm:px-6 py-3 sm:py-4 border-b border-gray-200 bg-theo-lavanda-light">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-theo-purple animate-pulse" />
+              <h2 className="text-base sm:text-xl font-bold text-gray-900">
+                <span className="hidden sm:inline">Modo Live com Theo</span>
+                <span className="sm:hidden">Live - Theo</span>
               </h2>
             </div>
             <button
               onClick={onClose}
-              className="p-2 hover:bg-white rounded-full transition-colors"
+              className="p-2 hover:bg-white rounded-full transition-colors touch-manipulation"
               aria-label="Fechar"
             >
-              <X className="h-6 w-6 text-gray-600" />
+              <X className="h-5 w-5 sm:h-6 sm:w-6 text-gray-600" />
             </button>
           </div>
 
           {/* Content */}
-          <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
+          <div className="flex-1 overflow-y-auto p-3 sm:p-6 flex flex-col items-center">
             {/* Layout: Webcam grande + Avatar pequeno sobreposto */}
             <motion.div
-              className="mb-8 w-full max-w-4xl relative"
+              className="mb-4 sm:mb-8 w-full max-w-4xl relative"
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
@@ -113,11 +114,11 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
                   isRecording={conversationState === "listening"}
                   className="w-full aspect-video"
                 />
-                <p className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
+                <p className="absolute bottom-2 left-2 sm:bottom-4 sm:left-4 bg-black/50 backdrop-blur-sm text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-medium">
                   Você
                 </p>
                 {webcamError && (
-                  <p className="absolute bottom-4 right-4 bg-red-500/90 text-white px-3 py-1.5 rounded-full text-xs">
+                  <p className="absolute bottom-2 right-2 sm:bottom-4 sm:right-4 bg-red-500/90 text-white px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-[10px] sm:text-xs">
                     {webcamError}
                   </p>
                 )}
@@ -125,15 +126,15 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
 
               {/* Avatar do Theo - Pequeno, sobreposto no canto */}
               <motion.div
-                className="absolute bottom-6 right-6 flex flex-col items-center"
+                className="absolute bottom-3 right-3 sm:bottom-6 sm:right-6 flex flex-col items-center"
                 initial={{ scale: 0, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.4, type: "spring" }}
               >
-                <div className="relative bg-white rounded-full p-2 shadow-2xl border-4 border-theo-purple/30">
+                <div className="relative bg-white rounded-full p-1.5 sm:p-2 shadow-2xl border-2 sm:border-4 border-theo-purple/30">
                   <TheoLiveAvatar isTalking={isTalking} size="md" />
                 </div>
-                <p className="mt-2 text-xs text-white font-semibold bg-theo-purple px-3 py-1 rounded-full shadow-lg">
+                <p className="mt-1 sm:mt-2 text-[10px] sm:text-xs text-white font-semibold bg-theo-purple px-2 sm:px-3 py-0.5 sm:py-1 rounded-full shadow-lg">
                   Theo
                 </p>
               </motion.div>
@@ -141,32 +142,32 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
 
             {/* Status Indicator */}
             <motion.div
-              className="mb-6 text-center"
+              className="mb-4 sm:mb-6 text-center px-4"
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               transition={{ delay: 0.3 }}
             >
               {conversationState === "listening" && (
-                <div className="flex flex-col items-center gap-2">
+                <div className="flex flex-col items-center gap-1.5 sm:gap-2">
                   <div className="flex items-center gap-2">
                     <motion.div
-                      className="w-3 h-3 rounded-full bg-red-500"
+                      className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500"
                       animate={{ scale: [1, 1.3, 1] }}
                       transition={{ repeat: Infinity, duration: 1.5 }}
                     />
-                    <span className="text-lg font-medium text-gray-900">
+                    <span className="text-base sm:text-lg font-medium text-gray-900">
                       Ouvindo você...
                     </span>
                   </div>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-xs sm:text-sm text-gray-600 font-mono">
                     {formatTime(recordingTime)}
                   </span>
                 </div>
               )}
               {conversationState === "processing" && (
                 <div className="flex items-center gap-2">
-                  <Loader2 className="h-5 w-5 animate-spin text-theo-purple" />
-                  <span className="text-lg font-medium text-gray-900">
+                  <Loader2 className="h-4 w-4 sm:h-5 sm:w-5 animate-spin text-theo-purple" />
+                  <span className="text-base sm:text-lg font-medium text-gray-900">
                     Theo está pensando...
                   </span>
                 </div>
@@ -174,21 +175,21 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
               {conversationState === "speaking" && (
                 <div className="flex items-center gap-2">
                   <motion.div
-                    className="w-3 h-3 rounded-full bg-theo-purple"
+                    className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-theo-purple"
                     animate={{ scale: [1, 1.3, 1] }}
                     transition={{ repeat: Infinity, duration: 1 }}
                   />
-                  <span className="text-lg font-medium text-gray-900">
+                  <span className="text-base sm:text-lg font-medium text-gray-900">
                     Theo está falando...
                   </span>
                 </div>
               )}
               {conversationState === "idle" && messages.length === 0 && (
-                <div className="flex flex-col items-center gap-2">
-                  <span className="text-lg font-medium text-gray-900">
+                <div className="flex flex-col items-center gap-1.5 sm:gap-2">
+                  <span className="text-base sm:text-lg font-medium text-gray-900">
                     Olá! Estou pronto para conversar.
                   </span>
-                  <span className="text-sm text-gray-600">
+                  <span className="text-xs sm:text-sm text-gray-600">
                     Segure o botão abaixo e fale comigo
                   </span>
                 </div>
@@ -249,17 +250,17 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
           </div>
 
           {/* Footer - Push to Talk Button */}
-          <div className="p-6 border-t border-gray-200 bg-theo-lavanda-light">
+          <div className="p-4 sm:p-6 border-t border-gray-200 bg-theo-lavanda-light safe-area-bottom">
             <div className="flex justify-center">
               {conversationState === "listening" ? (
                 <motion.button
                   onMouseUp={stopListening}
                   onTouchEnd={stopListening}
-                  className="relative w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-2xl flex items-center justify-center transition-all"
+                  className="relative w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-red-500 hover:bg-red-600 active:bg-red-600 text-white shadow-2xl flex items-center justify-center transition-all touch-manipulation"
                   whileTap={{ scale: 0.95 }}
                   aria-label="Solte para enviar"
                 >
-                  <MicOff className="h-8 w-8" />
+                  <MicOff className="h-7 w-7 sm:h-8 sm:w-8" />
                   
                   {/* Pulso animado */}
                   <motion.div
@@ -276,9 +277,9 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
                     conversationState === "processing" ||
                     conversationState === "speaking"
                   }
-                  className={`relative w-20 h-20 rounded-full shadow-2xl flex items-center justify-center transition-all ${
+                  className={`relative w-16 h-16 sm:w-20 sm:h-20 rounded-full shadow-2xl flex items-center justify-center transition-all touch-manipulation ${
                     conversationState === "idle"
-                      ? "bg-theo-purple hover:bg-theo-purple-dark text-white"
+                      ? "bg-theo-purple hover:bg-theo-purple-dark active:bg-theo-purple-dark text-white"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
                   }`}
                   whileTap={conversationState === "idle" ? { scale: 0.95 } : {}}
@@ -286,9 +287,9 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
                 >
                   {conversationState === "processing" ||
                   conversationState === "speaking" ? (
-                    <Loader2 className="h-8 w-8 animate-spin" />
+                    <Loader2 className="h-7 w-7 sm:h-8 sm:w-8 animate-spin" />
                   ) : (
-                    <Mic className="h-8 w-8" />
+                    <Mic className="h-7 w-7 sm:h-8 sm:w-8" />
                   )}
                 </motion.button>
               )}
@@ -298,7 +299,7 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
           {/* Floating Chat Button */}
           <motion.button
             onClick={() => setIsChatPopupOpen(true)}
-            className="absolute bottom-24 right-8 w-14 h-14 bg-theo-coral hover:bg-theo-coral-dark text-white rounded-full shadow-2xl flex items-center justify-center transition-all group"
+            className="absolute bottom-20 sm:bottom-24 right-4 sm:right-8 w-12 h-12 sm:w-14 sm:h-14 bg-theo-coral hover:bg-theo-coral-dark active:bg-theo-coral-dark text-white rounded-full shadow-2xl flex items-center justify-center transition-all group touch-manipulation"
             whileHover={{ scale: 1.1 }}
             whileTap={{ scale: 0.95 }}
             aria-label="Ver mensagens"
@@ -306,12 +307,12 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
             animate={{ opacity: 1, scale: 1 }}
             transition={{ delay: 0.5 }}
           >
-            <MessageSquare className="h-6 w-6" />
+            <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6" />
             
             {/* Badge de contagem */}
             {messages.length > 0 && (
               <motion.div
-                className="absolute -top-1 -right-1 w-6 h-6 bg-theo-purple text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg"
+                className="absolute -top-1 -right-1 w-5 h-5 sm:w-6 sm:h-6 bg-theo-purple text-white text-[10px] sm:text-xs font-bold rounded-full flex items-center justify-center shadow-lg"
                 initial={{ scale: 0 }}
                 animate={{ scale: 1 }}
                 transition={{ type: "spring", stiffness: 500, damping: 15 }}
