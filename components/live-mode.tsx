@@ -3,7 +3,9 @@
 import { motion, AnimatePresence } from "framer-motion"
 import { X, Mic, MicOff, Loader2 } from "lucide-react"
 import { TheoLiveAvatar } from "./theo-live-avatar"
-import { useVoiceConversation } from "@/lib/use-voice-conversation"
+import { VideoPreview } from "./video-preview"
+import { useGeminiLiveConversation } from "@/lib/use-gemini-live-conversation"
+import { useWebcamStream } from "@/lib/use-webcam-stream"
 import { useEffect } from "react"
 
 interface LiveModeProps {
@@ -13,6 +15,15 @@ interface LiveModeProps {
 
 export function LiveMode({ isOpen, onClose }: LiveModeProps) {
   const {
+    videoRef,
+    isStreaming,
+    error: webcamError,
+    startStream,
+    stopStream,
+    captureFrame,
+  } = useWebcamStream()
+  
+  const {
     conversationState,
     messages,
     recordingTime,
@@ -21,13 +32,24 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
     stopListening,
     cancelListening,
     error,
-  } = useVoiceConversation()
+  } = useGeminiLiveConversation({
+    captureVideoFrame: captureFrame,
+  })
 
   const formatTime = (seconds: number) => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${mins}:${secs.toString().padStart(2, "0")}`
   }
+
+  // Iniciar webcam quando modal abre
+  useEffect(() => {
+    if (isOpen) {
+      startStream()
+    } else {
+      stopStream()
+    }
+  }, [isOpen, startStream, stopStream])
 
   // Limpar ao fechar
   useEffect(() => {
@@ -73,14 +95,38 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
-            {/* Avatar do Theo */}
+            {/* Layout: Webcam + Avatar */}
             <motion.div
-              className="mb-8"
+              className="mb-8 w-full max-w-5xl grid grid-cols-2 gap-6"
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              <TheoLiveAvatar isTalking={isTalking} size="xl" />
+              {/* Webcam Preview */}
+              <div className="flex flex-col items-center">
+                <VideoPreview
+                  videoRef={videoRef}
+                  isStreaming={isStreaming}
+                  isRecording={conversationState === "listening"}
+                  className="w-full aspect-video max-w-md"
+                />
+                <p className="mt-3 text-sm text-gray-600 font-medium">
+                  Você
+                </p>
+                {webcamError && (
+                  <p className="mt-2 text-xs text-red-600">
+                    {webcamError}
+                  </p>
+                )}
+              </div>
+
+              {/* Avatar do Theo */}
+              <div className="flex flex-col items-center justify-center">
+                <TheoLiveAvatar isTalking={isTalking} size="xl" />
+                <p className="mt-3 text-sm text-gray-600 font-medium">
+                  Theo
+                </p>
+              </div>
             </motion.div>
 
             {/* Status Indicator */}
