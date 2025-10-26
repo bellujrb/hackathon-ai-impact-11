@@ -77,7 +77,7 @@ export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, sel
                 onSelectBenefit(null)
               }}
               isActive={selectedTab === "inicio"}
-              className="w-full justify-start gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-purple-100 hover:dark:bg-purple-900/30 hover:scale-[1.02] data-[active=true]:bg-theo-purple data-[active=true]:text-white data-[active=true]:shadow-theo dark:data-[active=true]:bg-purple-700"
+              className="w-full justify-start gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-purple-100 hover:dark:bg-purple-900/30 hover:scale-[1.02] data-[active=true]:!bg-[#6B5FC9] data-[active=true]:!text-white data-[active=true]:!shadow-md dark:data-[active=true]:!bg-purple-600 dark:data-[active=true]:!text-white"
             >
               <Home className="h-5 w-5" />
               <span>Início</span>
@@ -91,7 +91,7 @@ export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, sel
                 onSelectBenefit(null)
               }}
               isActive={selectedTab === "verificador"}
-              className="w-full justify-start gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-blue-100 hover:dark:bg-blue-900/30 hover:scale-[1.02] data-[active=true]:bg-theo-purple data-[active=true]:text-white data-[active=true]:shadow-theo dark:data-[active=true]:bg-purple-700"
+              className="w-full justify-start gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-blue-100 hover:dark:bg-blue-900/30 hover:scale-[1.02] data-[active=true]:!bg-[#6B5FC9] data-[active=true]:!text-white data-[active=true]:!shadow-md dark:data-[active=true]:!bg-purple-600 dark:data-[active=true]:!text-white"
             >
               <FileCheck className="h-5 w-5" />
               <span>Verificador de Documentos</span>
@@ -105,7 +105,7 @@ export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, sel
                 onSelectBenefit(null)
               }}
               isActive={selectedTab === "designacoes"}
-              className="w-full justify-start gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-green-100 hover:dark:bg-green-900/30 hover:scale-[1.02] data-[active=true]:bg-theo-purple data-[active=true]:text-white data-[active=true]:shadow-theo dark:data-[active=true]:bg-purple-700"
+              className="w-full justify-start gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-green-100 hover:dark:bg-green-900/30 hover:scale-[1.02] data-[active=true]:!bg-[#6B5FC9] data-[active=true]:!text-white data-[active=true]:!shadow-md dark:data-[active=true]:!bg-purple-600 dark:data-[active=true]:!text-white"
             >
               <Scale className="h-5 w-5" />
               <span>Designações Oficiais</span>
