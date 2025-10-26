@@ -87,6 +87,39 @@ export async function POST(req: NextRequest) {
 
     // If user explicitly asked to generate a report (initial intent), ask for the target
     if (isGenerateReportIntent) {
+      // If the same message already contains a clear benefit target, generate immediately
+      const { benefitType: directBenefitType, benefitName: directBenefitName } = detectBenefitType(message)
+      if (directBenefitType !== 'outros') {
+        // Generate report directly
+        const rightsAgent = new RightsSpecialistAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+        const officialWriter = new (await import('@/lib/agents/official-writer')).OfficialWriterAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+
+        const benefits = await rightsAgent.identifyApplicableBenefits({
+          cid: null,
+          age: null,
+          supportLevel: null,
+          schoolType: 'nao-informado',
+          observations: '',
+        })
+
+        let mappedBenefitId: string = directBenefitType
+        if (directBenefitType === 'apoio-educacional') mappedBenefitId = 'educacao-inclusiva'
+        const benefit = benefits.find(b => b.id === mappedBenefitId) || benefits[0]
+
+        try {
+          const doc = await officialWriter.generateOfficialDocument(benefit, { cid: null, age: null, supportLevel: null, schoolType: 'nao-informado', observations: '' } as any, 'letter')
+
+          return NextResponse.json({
+            type: 'report-generated',
+            response: doc.content,
+            title: doc.title,
+          })
+        } catch (err) {
+          console.error('Error generating report:', err)
+          return NextResponse.json({ type: 'report-generated', response: 'Desculpe, não foi possível gerar o relatório no momento.' })
+        }
+      }
+
       return NextResponse.json({
         type: 'ask-report-target',
         response: 'Entendi. Sobre qual assunto/benefício você quer que eu gere o relatório? (ex: conseguir um professor de apoio)'
