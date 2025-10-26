@@ -102,6 +102,9 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
       // Chamar API para processar com LangGraph/Gemini
       // send also the last assistant message content as context so the server can handle multi-turn flows
       const lastAssistant = messages.slice().reverse().find(m => m.role === 'assistant')
+      const inputLower = userInput.toLowerCase()
+      const isUserAskingReport = inputLower.includes('relat') || inputLower.includes('relatorio') || inputLower.includes('laudo')
+
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
@@ -111,7 +114,8 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
           message: userInput,
           lastAssistant: lastAssistant ? lastAssistant.content : null,
           // ensure we send an explicit previousInteractionType when available
-          previousInteractionType: lastAssistantType || (awaitingReportTarget ? 'ask-report-target' : null),
+          // if the user message itself contains report keywords, force-report to avoid ambiguity
+          previousInteractionType: isUserAskingReport ? 'force-report' : (lastAssistantType || (awaitingReportTarget ? 'ask-report-target' : null)),
         }),
       })
 

@@ -45,6 +45,37 @@ export async function POST(req: NextRequest) {
   // Also treat short replies like "sobre passe livre" as report-target answers when benefit is detected.
   const isShortReportAnswer = messageLower.startsWith('sobre ') && directDetect.benefitType !== 'outros'
 
+    // If client explicitly requested force-report, generate when benefit detected
+    if (previousInteractionType === 'force-report' && directDetect.benefitType !== 'outros') {
+      try {
+        const rightsAgent = new RightsSpecialistAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+        const officialWriter = new (await import('@/lib/agents/official-writer')).OfficialWriterAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+
+        const benefits = await rightsAgent.identifyApplicableBenefits({
+          cid: null,
+          age: null,
+          supportLevel: null,
+          schoolType: 'nao-informado',
+          observations: '',
+        })
+
+        let mappedBenefitId: string = directDetect.benefitType
+        if (directDetect.benefitType === 'apoio-educacional') mappedBenefitId = 'educacao-inclusiva'
+        const benefit = benefits.find(b => b.id === mappedBenefitId) || benefits[0]
+
+        const doc = await officialWriter.generateOfficialDocument(benefit, { cid: null, age: null, supportLevel: null, schoolType: 'nao-informado', observations: '' } as any, 'letter')
+
+        return NextResponse.json({
+          type: 'report-generated',
+          response: doc.content,
+          title: doc.title,
+        })
+      } catch (err) {
+        console.error('Error generating report (force):', err)
+        return NextResponse.json({ type: 'report-generated', response: 'Desculpe, não foi possível gerar o relatório no momento.' })
+      }
+    }
+
   if (((messageLower.includes('relat') || messageLower.includes('relatorio') || messageLower.includes('laudo')) && directDetect.benefitType !== 'outros') || isShortReportAnswer) {
       try {
         const rightsAgent = new RightsSpecialistAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
