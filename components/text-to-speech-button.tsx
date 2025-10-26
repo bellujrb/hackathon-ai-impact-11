@@ -13,7 +13,7 @@ interface TextToSpeechButtonProps {
 export function TextToSpeechButton({ text, className = "" }: TextToSpeechButtonProps) {
   const [isPlaying, setIsPlaying] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
-  const [useGoogleTTS, setUseGoogleTTS] = useState(true)
+  const [useOpenAITTS, setUseOpenAITTS] = useState(true)
   const audioRef = useRef<HTMLAudioElement | null>(null)
   const utteranceRef = useRef<SpeechSynthesisUtterance | null>(null)
 
@@ -42,7 +42,7 @@ export function TextToSpeechButton({ text, className = "" }: TextToSpeechButtonP
     }
   }, [text])
 
-  const playWithGoogleTTS = async () => {
+  const playWithOpenAITTS = async () => {
     try {
       setIsLoading(true)
 
@@ -56,10 +56,10 @@ export function TextToSpeechButton({ text, className = "" }: TextToSpeechButtonP
       const data = await response.json()
 
       if (!data.success) {
-        // Se Google TTS falhar, usar fallback
+        // Se OpenAI TTS falhar, usar fallback
         if (data.fallback) {
-          console.log("Google TTS indisponível, usando Web Speech API")
-          setUseGoogleTTS(false)
+          console.log("OpenAI TTS indisponível, usando Web Speech API")
+          setUseOpenAITTS(false)
           await playWithWebSpeech()
           return
         }
@@ -97,13 +97,13 @@ export function TextToSpeechButton({ text, className = "" }: TextToSpeechButtonP
       await audio.play()
 
     } catch (err) {
-      console.error("Erro ao usar Google TTS:", err)
+      console.error("Erro ao usar OpenAI TTS:", err)
       setIsLoading(false)
       
       // Tentar fallback para Web Speech
-      if (useGoogleTTS) {
+      if (useOpenAITTS) {
         console.log("Tentando fallback para Web Speech API")
-        setUseGoogleTTS(false)
+        setUseOpenAITTS(false)
         await playWithWebSpeech()
       } else {
         toast.error("Erro ao reproduzir áudio")
@@ -195,8 +195,8 @@ export function TextToSpeechButton({ text, className = "" }: TextToSpeechButtonP
     }
 
     // Iniciar reprodução
-    if (useGoogleTTS) {
-      await playWithGoogleTTS()
+    if (useOpenAITTS) {
+      await playWithOpenAITTS()
     } else {
       await playWithWebSpeech()
     }

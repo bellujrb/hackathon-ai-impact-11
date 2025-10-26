@@ -1,7 +1,37 @@
 import { NextRequest, NextResponse } from "next/server"
-import { TextToSpeechClient } from "@google-cloud/text-to-speech"
 
 export const maxDuration = 60
+
+// Tentar OpenAI TTS primeiro (melhor qualidade)
+async function synthesizeWithOpenAI(text: string): Promise<ArrayBuffer> {
+  const openaiApiKey = process.env.OPENAI_API_KEY
+  
+  if (!openaiApiKey) {
+    throw new Error("OpenAI API key não configurada")
+  }
+
+  const response = await fetch("https://api.openai.com/v1/audio/speech", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${openaiApiKey}`,
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      model: "tts-1-hd", // Modelo HD de alta qualidade
+      input: text,
+      voice: "nova", // Voz feminina, clara e calorosa (perfeita para Theo)
+      speed: 0.95, // Velocidade natural
+      response_format: "mp3",
+    }),
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`OpenAI TTS error: ${error}`)
+  }
+
+  return await response.arrayBuffer()
+}
 
 export async function POST(req: NextRequest) {
   try {
@@ -14,11 +44,20 @@ export async function POST(req: NextRequest) {
       )
     }
 
-    // Verificar credenciais do Google Cloud
-    const privateKey = process.env.GOOGLE_CLOUD_PRIVATE_KEY?.split(String.raw`\n`).join("\n")
-    const clientEmail = process.env.GOOGLE_CLOUD_CLIENT_EMAIL
+    // Limitar tamanho do texto (OpenAI TTS tem limite de 4096 caracteres)
+    const truncatedText = text.length > 4000 ? text.substring(0, 4000) + "..." : text
 
-    if (!privateKey || !clientEmail) {
+    let audioBuffer: ArrayBuffer | null = null
+    let usedService = "none"
+
+    // Tentar OpenAI TTS primeiro
+    try {
+      audioBuffer = await synthesizeWithOpenAI(truncatedText)
+      usedService = "openai"
+    } catch (openaiError) {
+      console.error("Erro ao usar OpenAI TTS:", openaiError)
+      
+      // Se OpenAI falhar, retornar erro para usar fallback do navegador
       return NextResponse.json({
         success: false,
         error: "Serviço de voz temporariamente indisponível",
@@ -26,49 +65,23 @@ export async function POST(req: NextRequest) {
       }, { status: 503 })
     }
 
-    // Criar cliente Google Text-to-Speech
-    const client = new TextToSpeechClient({
-      credentials: {
-        client_email: clientEmail,
-        private_key: privateKey,
-      },
-    })
-
-    // Configurar request para síntese de voz
-    const request = {
-      input: { text },
-      voice: {
-        languageCode: "pt-BR",
-        // Neural2-C = Voz feminina natural e calorosa (perfeita para Theo)
-        name: "pt-BR-Neural2-C",
-        ssmlGender: "FEMALE" as const,
-      },
-      audioConfig: {
-        audioEncoding: "MP3" as const,
-        speakingRate: 0.95, // Velocidade natural
-        pitch: 1.0, // Tom neutro-amigável
-        volumeGainDb: 0.0,
-        effectsProfileId: ["small-bluetooth-speaker-class-device"], // Otimizado para dispositivos
-      },
-    }
-
-    const [response] = await client.synthesizeSpeech(request)
-
-    if (!response.audioContent) {
+    if (!audioBuffer) {
       return NextResponse.json({
         success: false,
         error: "Não foi possível gerar áudio",
-      }, { status: 500 })
+        fallback: true,
+      }, { status: 503 })
     }
 
     // Retornar áudio como base64
-    const audioBase64 = Buffer.from(response.audioContent as Uint8Array).toString("base64")
+    const audioBase64 = Buffer.from(audioBuffer).toString("base64")
 
     return NextResponse.json({
       success: true,
       data: {
         audio: audioBase64,
         format: "mp3",
+        service: usedService,
       },
     })
     
