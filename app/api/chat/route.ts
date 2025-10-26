@@ -25,20 +25,13 @@ export async function POST(req: NextRequest) {
     const messageLower = message.toLowerCase()
 
     // Detect explicit request to GENERATE a report (multi-step flow)
-    // Accept variations with and without accents and short forms
+    // Use a compact substring match to handle accents and multiple phrasings.
     const isGenerateReportIntent =
-      messageLower.includes("gerar relatório") ||
-      messageLower.includes("gere um relatório") ||
-      messageLower.includes("gerar um relatório") ||
-      messageLower.includes("gere relatório") ||
-      messageLower.includes("gerar laudo") ||
+      messageLower.includes("relat") || // matches 'relatório' or 'relatorio' or similar
+      messageLower.includes("laudo") ||
+      messageLower.includes("gerar rel") ||
+      messageLower.includes("gere rel") ||
       messageLower.includes("gere um laudo") ||
-      // without accent
-      messageLower.includes("gerar relatorio") ||
-      messageLower.includes("gere um relatorio") ||
-      messageLower.includes("gere relatorio") ||
-      messageLower.includes("relatorio") ||
-      messageLower.includes("gerar laudo") ||
       messageLower.includes("gerar laudo")
 
     const isReportRequest =
