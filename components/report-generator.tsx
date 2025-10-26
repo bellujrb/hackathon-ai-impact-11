@@ -27,6 +27,7 @@ export default function ReportGenerator() {
   const [legalReferences, setLegalReferences] = useState("Lei nº 13.146/2015; Decreto nº 10.502/2020; Lei nº 12.764/2012")
 
   const [preview, setPreview] = useState("")
+  const [confirmedByProfessional, setConfirmedByProfessional] = useState(false)
 
   const handleGenerate = () => {
     const data: ReportData = {
@@ -56,6 +57,10 @@ export default function ReportGenerator() {
 
   const handleCopy = async () => {
     if (!preview) return
+    if (!confirmedByProfessional) {
+      alert("Confirme que um profissional habilitado revisará e assinará este relatório antes de copiar ou baixar.")
+      return
+    }
     try {
       await navigator.clipboard.writeText(preview)
       alert("Relatório copiado para a área de transferência")
@@ -66,6 +71,10 @@ export default function ReportGenerator() {
 
   const handleDownload = () => {
     if (!preview) return
+    if (!confirmedByProfessional) {
+      alert("Confirme que um profissional habilitado revisará e assinará este relatório antes de copiar ou baixar.")
+      return
+    }
     const blob = new Blob([preview], { type: "text/plain;charset=utf-8" })
     const url = URL.createObjectURL(blob)
     const a = document.createElement("a")
@@ -130,10 +139,17 @@ export default function ReportGenerator() {
             <Input value={legalReferences} onChange={(e) => setLegalReferences(e.target.value)} className="mt-1" />
           </div>
 
-          <div className="flex gap-2 mt-3">
-            <Button onClick={handleGenerate}>Gerar Relatório</Button>
-            <Button onClick={handleCopy} disabled={!preview} variant="outline">Copiar</Button>
-            <Button onClick={handleDownload} disabled={!preview} variant="ghost">Baixar .txt</Button>
+          <div className="flex flex-col gap-2 mt-3">
+            <div className="flex gap-2">
+              <Button onClick={handleGenerate}>Gerar Relatório</Button>
+              <Button onClick={handleCopy} disabled={!preview} variant="outline">Copiar</Button>
+              <Button onClick={handleDownload} disabled={!preview} variant="ghost">Baixar .txt</Button>
+            </div>
+
+            <label className="text-sm text-gray-700 mt-2 inline-flex items-center gap-2">
+              <input type="checkbox" checked={confirmedByProfessional} onChange={(e) => setConfirmedByProfessional(e.target.checked)} />
+              <span>Confirmo que um profissional habilitado revisará e assinará este relatório antes do uso oficial.</span>
+            </label>
           </div>
 
           {preview && (
