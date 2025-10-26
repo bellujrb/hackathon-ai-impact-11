@@ -38,21 +38,25 @@ export function DesignationRequest() {
     documents: [] as File[],
     observations: ""
   })
+  
   const BENEFIT_TYPES = [
     { id: "bpc", name: "BPC/LOAS", description: "Benefício de Prestação Continuada da Assistência Social" },
     { id: "passe-livre", name: "Passe Livre", description: "Transporte gratuito para tratamento e terapias" },
     { id: "isencao-ipva", name: "Isenção de IPVA", description: "Isenção total do Imposto sobre Propriedade de Veículos" },
     { id: "professor-apoio", name: "Professor de Apoio", description: "Atendimento Educacional Especializado" }
   ]
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files)
       setFormData(prev => ({ ...prev, documents: [...prev.documents, ...files] }))
     }
-  };
+  }
+  
   const removeDocument = (index: number) => {
     setFormData(prev => ({ ...prev, documents: prev.documents.filter((_, i) => i !== index) }))
   }
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
   const [isConfirming, setIsConfirming] = useState(false)
@@ -78,11 +82,9 @@ ${formData.applicantName}
 Telefone: ${formData.applicantPhone}
 E-mail: ${formData.applicantEmail}`
 
-  // Nova lógica para envio de e-mail
   const handleSubmit = async () => {
     setIsSubmitting(true)
 
-    // Essa função converte arquivos para base64 para envio via EmailJS
     function toBase64(file: File): Promise<string> {
       return new Promise((resolve, reject) => {
         const reader = new FileReader()
@@ -91,23 +93,20 @@ E-mail: ${formData.applicantEmail}`
         reader.onerror = error => reject(error)
       })
     }
-    // Monta o corpo do e-mail
+    
     const emailData: any = {
       email: RECIPIENT_EMAIL,
       benefit_type: benefitName,
       applicant_name: formData.applicantName,
       applicant_email: formData.applicantEmail,
-      email_body: emailBody, // Corpo do e-mail elaborado
+      email_body: emailBody,
     }
 
-    // Adiciona documentos como base64 tipicamente (envio até ~2MB cada no EmailJS)
     for (let i = 0; i < formData.documents.length; i++) {
       emailData[`document_${i + 1}`] = await toBase64(formData.documents[i])
       emailData[`document_name_${i + 1}`] = formData.documents[i].name
     }
 
-    // ENVIAR usando EmailJS
-    // Preencha seus valores do serviço!
     try {
       const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID
       const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID
@@ -135,85 +134,98 @@ E-mail: ${formData.applicantEmail}`
       console.error("Erro ao enviar o e-mail:", error)
     }
     setIsSubmitting(false)
+    setIsConfirming(false)
   }
 
   if (submitted) {
     return (
-      <Card className="p-8 m-8 text-center">
-        <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-green-600" />
-        <h2 className="mb-2 text-2xl font-bold text-gray-900">Solicitação Enviada com Sucesso!</h2>
-        <p className="mb-6 text-gray-600">
-          Sua solicitação foi enviada para a Defensoria Pública. Você receberá uma resposta no e-mail{" "}
-          <strong>{formData.applicantEmail}</strong> assim que o caso for analisado.
-        </p>
-        <div className="mb-6 rounded-lg bg-gray-900 p-4 font-mono text-xl font-bold text-white">
-          REQ-{Date.now()}
+      <div className="flex h-full flex-col bg-white dark:bg-gray-950">
+        <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+          <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Solicitação Enviada</h1>
         </div>
-        <div className="mb-6 flex items-center justify-center gap-3 text-sm text-gray-600">
-          <Clock className="h-5 w-5" />
-          <span>Status: Pendente de Análise</span>
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="mx-auto max-w-2xl">
+            <Card className="p-8 text-center dark:bg-gray-800">
+              <CheckCircle2 className="h-16 w-16 text-green-600 dark:text-green-400 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Solicitação Enviada com Sucesso!</h2>
+              <p className="mb-6 text-gray-600 dark:text-gray-300">
+                Sua solicitação foi enviada para a Defensoria Pública. Você receberá uma resposta no e-mail{" "}
+                <strong className="text-gray-900 dark:text-white">{formData.applicantEmail}</strong> assim que o caso for analisado.
+              </p>
+              <div className="bg-gray-900 dark:bg-gray-700 text-white p-4 rounded-lg font-mono text-xl font-bold mb-6">
+                REQ-{Date.now()}
+              </div>
+              <div className="flex items-center justify-center gap-3 text-sm text-gray-600 dark:text-gray-400 mb-6">
+                <Clock className="h-5 w-5" />
+                <span>Status: Pendente de Análise</span>
+              </div>
+              <p className="mb-6 text-xs text-gray-500 dark:text-gray-400">
+                Guarde este número de protocolo para referência futura. Verifique sua caixa de spam.
+              </p>
+              <Button className="w-full bg-theo-purple dark:bg-purple-600 hover:bg-theo-purple-dark dark:hover:bg-purple-700" onClick={() => window.location.reload()}>
+                Fazer Nova Solicitação
+              </Button>
+            </Card>
+          </div>
         </div>
-        <p className="mb-6 text-xs text-gray-500">
-          Guarde este número de protocolo para referência futura. Verifique sua caixa de spam.
-        </p>
-        <Button className="w-full" onClick={() => window.location.reload()}>
-          Fazer Nova Solicitação
-        </Button>
-      </Card>
+      </div>
     )
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
-      <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-4">
-        <h1 className="text-xl font-semibold text-gray-900">Designações Oficiais</h1>
+    <div className="flex h-full flex-col bg-white dark:bg-gray-950">
+      <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+        <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Designações Oficiais</h1>
       </div>
 
       <div className="flex-1 overflow-y-auto p-6">
         <div className="mx-auto max-w-3xl">
           {/* Banner Informativo */}
-          <Card className="p-4 bg-blue-50 border-blue-200 mb-6">
+          <Card className="p-4 bg-blue-50 dark:bg-blue-900/20 border-blue-200 dark:border-blue-800 mb-6">
             <div className="flex items-start gap-3">
-              <div className="shrink-0">
-                <FileText className="h-6 w-6 text-blue-600" />
+              <div className="flex-shrink-0">
+                <FileText className="h-6 w-6 text-blue-600 dark:text-blue-400" />
               </div>
               <div>
-                <h3 className="font-semibold text-blue-900 mb-1">Solicitar Advogado do Governo</h3>
-                <p className="text-sm text-blue-800">
-                  Esta ferramenta permite solicitar um advogado público para auxiliar no processo de obtenção de benefícios sociais.
+                <h3 className="font-semibold text-blue-900 dark:text-blue-200 mb-1">Solicitar Advogado do Governo</h3>
+                <p className="text-sm text-blue-800 dark:text-blue-200">
+                  Esta ferramenta permite solicitar um advogado público para auxiliar no processo de obtenção de benefícios sociais. 
                   Preencha o formulário abaixo com as informações necessárias e sua solicitação será enviada para a Defensoria Pública ou órgão competente.
                 </p>
               </div>
             </div>
           </Card>
+          
           <div className="mb-8">
             <div className="flex items-center justify-between">
               {[1, 2, 3, 4, 5, 6].map((step) => (
                 <div key={step} className="flex items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${step === currentStep ? "bg-gray-900 text-white" : step < currentStep ? "bg-green-600 text-white" : "bg-gray-200 text-gray-600"
-                    }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                    step === currentStep ? "bg-gray-900 dark:bg-gray-700 text-white" : step < currentStep ? "bg-green-600 dark:bg-green-700 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
+                  }`}>
                     {step < currentStep ? "✓" : step}
                   </div>
-                  {step < 6 && <div className={`w-12 h-1 ${step < currentStep ? "bg-green-600" : "bg-gray-200"}`} />}
+                  {step < 6 && <div className={`w-12 h-1 ${step < currentStep ? "bg-green-600 dark:bg-green-700" : "bg-gray-200 dark:bg-gray-700"}`} />}
                 </div>
               ))}
             </div>
           </div>
 
-          <Card className="p-6">
+          <Card className="p-6 dark:bg-gray-800">
             {currentStep === 1 && (
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">Passo 1: Seleção do Benefício</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 1: Seleção do Benefício</h2>
                 <div className="space-y-3">
                   {BENEFIT_TYPES.map((benefit) => (
                     <Card
                       key={benefit.id}
-                      className={`p-4 cursor-pointer border-2 transition-all ${formData.benefitType === benefit.id ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"
-                        }`}
+                      className={`p-4 cursor-pointer border-2 transition-all ${
+                        formData.benefitType === benefit.id ? "border-gray-900 dark:border-gray-600 bg-gray-50 dark:bg-gray-700" : "border-gray-200 dark:border-gray-700 hover:border-gray-300 dark:hover:border-gray-600"
+                      }`}
                       onClick={() => setFormData(prev => ({ ...prev, benefitType: benefit.id }))}
                     >
-                      <h3 className="font-semibold text-gray-900 mb-1">{benefit.name}</h3>
-                      <p className="text-sm text-gray-600">{benefit.description}</p>
+                      <h3 className="font-semibold text-gray-900 dark:text-white mb-1">{benefit.name}</h3>
+                      <p className="text-sm text-gray-600 dark:text-gray-300">{benefit.description}</p>
                     </Card>
                   ))}
                 </div>
@@ -222,17 +234,17 @@ E-mail: ${formData.applicantEmail}`
 
             {currentStep === 2 && (
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">Passo 2: Dados do Solicitante</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 2: Dados do Solicitante</h2>
                 <div className="space-y-3">
-                  <div><Label>Nome Completo *</Label><Input value={formData.applicantName} onChange={(e) => setFormData(prev => ({ ...prev, applicantName: e.target.value }))} /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Nome Completo *</Label><Input value={formData.applicantName} onChange={(e) => setFormData(prev => ({ ...prev, applicantName: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label>CPF *</Label><Input value={formData.applicantCPF} onChange={(e) => setFormData(prev => ({ ...prev, applicantCPF: e.target.value }))} /></div>
-                    <div><Label>RG *</Label><Input value={formData.applicantRG} onChange={(e) => setFormData(prev => ({ ...prev, applicantRG: e.target.value }))} /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">CPF *</Label><Input value={formData.applicantCPF} onChange={(e) => setFormData(prev => ({ ...prev, applicantCPF: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">RG *</Label><Input value={formData.applicantRG} onChange={(e) => setFormData(prev => ({ ...prev, applicantRG: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   </div>
-                  <div><Label>Endereço *</Label><Textarea value={formData.applicantAddress} onChange={(e) => setFormData(prev => ({ ...prev, applicantAddress: e.target.value }))} rows={2} /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Endereço *</Label><Textarea value={formData.applicantAddress} onChange={(e) => setFormData(prev => ({ ...prev, applicantAddress: e.target.value }))} rows={2} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Telefone *</Label><Input value={formData.applicantPhone} onChange={(e) => setFormData(prev => ({ ...prev, applicantPhone: e.target.value }))} /></div>
-                    <div><Label>E-mail *</Label><Input value={formData.applicantEmail} onChange={(e) => setFormData(prev => ({ ...prev, applicantEmail: e.target.value }))} /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">Telefone *</Label><Input value={formData.applicantPhone} onChange={(e) => setFormData(prev => ({ ...prev, applicantPhone: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">E-mail *</Label><Input value={formData.applicantEmail} onChange={(e) => setFormData(prev => ({ ...prev, applicantEmail: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   </div>
                 </div>
               </div>
@@ -240,47 +252,47 @@ E-mail: ${formData.applicantEmail}`
 
             {currentStep === 3 && (
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">Passo 3: Dados do Beneficiário</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 3: Dados do Beneficiário</h2>
                 <div className="space-y-3">
-                  <div><Label>Nome da Criança/Adulto com Autismo *</Label><Input value={formData.beneficiaryName} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryName: e.target.value }))} /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Nome da Criança/Adulto com Autismo *</Label><Input value={formData.beneficiaryName} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryName: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label>CPF *</Label><Input value={formData.beneficiaryCPF} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryCPF: e.target.value }))} /></div>
-                    <div><Label>RG *</Label><Input value={formData.beneficiaryRG} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryRG: e.target.value }))} /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">CPF *</Label><Input value={formData.beneficiaryCPF} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryCPF: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">RG *</Label><Input value={formData.beneficiaryRG} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryRG: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   </div>
-                  <div><Label>Idade *</Label><Input type="number" value={formData.beneficiaryAge} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryAge: e.target.value }))} /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Idade *</Label><Input type="number" value={formData.beneficiaryAge} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryAge: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                 </div>
               </div>
             )}
 
             {currentStep === 4 && (
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">Passo 4: Composição Familiar / Renda</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 4: Composição Familiar / Renda</h2>
                 <div className="space-y-3">
-                  <div><Label>Renda Mensal da Família (R$) *</Label><Input type="number" value={formData.monthlyIncome} onChange={(e) => setFormData(prev => ({ ...prev, monthlyIncome: e.target.value }))} /></div>
-                  <div><Label>Número de Dependentes *</Label><Input type="number" value={formData.dependents} onChange={(e) => setFormData(prev => ({ ...prev, dependents: e.target.value }))} /></div>
-                  <div><Label>Composição Familiar *</Label><Textarea value={formData.familyComposition} onChange={(e) => setFormData(prev => ({ ...prev, familyComposition: e.target.value }))} rows={3} /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Renda Mensal da Família (R$) *</Label><Input type="number" value={formData.monthlyIncome} onChange={(e) => setFormData(prev => ({ ...prev, monthlyIncome: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Número de Dependentes *</Label><Input type="number" value={formData.dependents} onChange={(e) => setFormData(prev => ({ ...prev, dependents: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Composição Familiar *</Label><Textarea value={formData.familyComposition} onChange={(e) => setFormData(prev => ({ ...prev, familyComposition: e.target.value }))} rows={3} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                 </div>
               </div>
             )}
 
             {currentStep === 5 && (
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">Passo 5: Anexar Documentos</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 5: Anexar Documentos</h2>
                 <div className="space-y-3">
-                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                    <Upload className="h-12 w-12 text-gray-400 mx-auto mb-3" />
-                    <Label htmlFor="file-upload" className="cursor-pointer">
-                      <span className="text-blue-600 font-medium">Clique para fazer upload</span> ou arraste arquivos
+                  <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center">
+                    <Upload className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
+                    <Label htmlFor="file-upload" className="cursor-pointer text-gray-900 dark:text-gray-100">
+                      <span className="text-blue-600 dark:text-blue-400 font-medium">Clique para fazer upload</span> ou arraste arquivos
                     </Label>
                     <Input id="file-upload" type="file" multiple accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} className="hidden" />
                   </div>
                   {formData.documents.length > 0 && (
                     <div className="space-y-2">
                       {formData.documents.map((file, index) => (
-                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 rounded-lg">
-                          <FileText className="h-5 w-5 text-gray-400" />
-                          <span className="flex-1 text-sm">{file.name}</span>
-                          <Button variant="ghost" size="sm" onClick={() => removeDocument(index)}>Remover</Button>
+                        <div key={index} className="flex items-center gap-3 p-3 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                          <FileText className="h-5 w-5 text-gray-400 dark:text-gray-300" />
+                          <span className="flex-1 text-sm text-gray-900 dark:text-gray-100">{file.name}</span>
+                          <Button variant="ghost" size="sm" onClick={() => removeDocument(index)} className="dark:text-gray-300">Remover</Button>
                         </div>
                       ))}
                     </div>
@@ -291,15 +303,15 @@ E-mail: ${formData.applicantEmail}`
 
             {currentStep === 6 && (
               <div className="space-y-4">
-                <h2 className="text-xl font-semibold text-gray-900">Passo 6: Revisão</h2>
+                <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 6: Revisão</h2>
                 <div className="space-y-4">
                   <div>
-                    <Label>Observações Adicionais</Label>
-                    <Textarea value={formData.observations} onChange={(e) => setFormData(prev => ({ ...prev, observations: e.target.value }))} rows={4} />
+                    <Label className="text-gray-900 dark:text-gray-100">Observações Adicionais</Label>
+                    <Textarea value={formData.observations} onChange={(e) => setFormData(prev => ({ ...prev, observations: e.target.value }))} rows={4} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
                   </div>
-                  <Card className="p-4 bg-gray-50">
-                    <h3 className="font-semibold mb-3">Resumo</h3>
-                    <div className="space-y-2 text-sm">
+                  <Card className="p-4 bg-gray-50 dark:bg-gray-700">
+                    <h3 className="font-semibold mb-3 text-gray-900 dark:text-white">Resumo</h3>
+                    <div className="space-y-2 text-sm text-gray-700 dark:text-gray-300">
                       <p><span className="font-medium">Benefício:</span> {BENEFIT_TYPES.find(b => b.id === formData.benefitType)?.name}</p>
                       <p><span className="font-medium">Solicitante:</span> {formData.applicantName}</p>
                       <p><span className="font-medium">Beneficiário:</span> {formData.beneficiaryName} ({formData.beneficiaryAge} anos)</p>
@@ -310,17 +322,16 @@ E-mail: ${formData.applicantEmail}`
               </div>
             )}
 
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200">
-              <Button variant="outline" onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))} disabled={currentStep === 1} className="gap-2">
+            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <Button variant="outline" onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))} disabled={currentStep === 1} className="gap-2 dark:border-gray-600">
                 <ChevronLeft className="h-4 w-4" /> Anterior
               </Button>
               {currentStep < 6 ? (
-                <Button onClick={() => setCurrentStep(prev => Math.min(6, prev + 1))} className="gap-2">
+                <Button onClick={() => setCurrentStep(prev => Math.min(6, prev + 1))} className="gap-2 bg-theo-purple dark:bg-purple-700 hover:bg-theo-purple-dark dark:hover:bg-purple-800">
                   Próximo <ChevronRight className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button onClick={() => setIsConfirming(true)} disabled={isSubmitting} className="gap-2 bg-green-600 hover:bg-green-700">
-                  <Send className="h-4 w-4" />
+                <Button onClick={() => setIsConfirming(true)} disabled={isSubmitting} className="gap-2 bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">
                   {isSubmitting ? "Enviando..." : "Enviar Solicitação"}
                 </Button>
               )}
@@ -328,27 +339,27 @@ E-mail: ${formData.applicantEmail}`
           </Card>
 
           <Dialog open={isConfirming} onOpenChange={setIsConfirming}>
-            <DialogContent className="sm:max-w-[525px]">
+            <DialogContent className="sm:max-w-[525px] dark:bg-gray-800 dark:border-gray-700">
               <DialogHeader>
-                <DialogTitle>Confirmar Envio da Solicitação</DialogTitle>
-                <DialogDescription>
-                  Sua solicitação será enviada para a <strong>Defensoria Pública</strong> para análise.
+                <DialogTitle className="text-gray-900 dark:text-white">Confirmar Envio da Solicitação</DialogTitle>
+                <DialogDescription className="text-gray-600 dark:text-gray-400">
+                  Sua solicitação será enviada para a <strong className="text-gray-900 dark:text-white">Defensoria Pública</strong> para análise.
                   Revise as informações abaixo antes de confirmar.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4 text-sm">
                 <div className="space-y-1">
-                  <p><strong>Para:</strong> {RECIPIENT_EMAIL}</p>
-                  <p><strong>Assunto:</strong> Solicitação de Apoio Jurídico - {BENEFIT_TYPES.find(b => b.id === formData.benefitType)?.name}</p>
+                  <p className="text-gray-900 dark:text-gray-100"><strong>Para:</strong> {RECIPIENT_EMAIL}</p>
+                  <p className="text-gray-900 dark:text-gray-100"><strong>Assunto:</strong> Solicitação de Apoio Jurídico - {BENEFIT_TYPES.find(b => b.id === formData.benefitType)?.name}</p>
                 </div>
-                <div className="max-h-60 overflow-y-auto rounded-md border bg-gray-50 p-4 whitespace-pre-wrap">
+                <div className="max-h-60 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 whitespace-pre-wrap text-gray-700 dark:text-gray-300">
                   <h4 className="font-semibold mb-2 text-base">Visualização do E-mail</h4>
                   <p>{emailBody}</p>
                 </div>
               </div>
               <DialogFooter>
-                <Button variant="outline" onClick={() => setIsConfirming(false)}>Cancelar</Button>
-                <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2 bg-green-600 hover:bg-green-700">
+                <Button variant="outline" onClick={() => setIsConfirming(false)} className="dark:border-gray-600">Cancelar</Button>
+                <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2 bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">
                   {isSubmitting ? "Enviando..." : (<> <Send className="h-4 w-4" /> Confirmar e Enviar </>)}
                 </Button>
               </DialogFooter>
