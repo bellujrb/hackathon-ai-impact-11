@@ -107,57 +107,57 @@ export default function ReportGenerator() {
 
   return (
     <div className="mt-6">
-      <Card className="p-6">
-        <h2 className="text-lg font-semibold mb-4">Gerador de Relatório</h2>
+      <Card className="p-6 dark:bg-gray-800">
+        <h2 className="text-lg font-semibold mb-4 text-gray-900 dark:text-white">Gerador de Relatório</h2>
 
         <div className="grid grid-cols-1 gap-4">
           <div>
-            <h3 className="font-medium">1) Identificação do Profissional</h3>
-            <Label>Nome completo</Label>
-            <Input value={professionalName} onChange={(e) => setProfessionalName(e.target.value)} className="mt-1" />
-            <Label className="mt-2">Registro profissional</Label>
-            <Input value={professionalRegistry} onChange={(e) => setProfessionalRegistry(e.target.value)} className="mt-1" />
-            <Label className="mt-2">Especialidade / Local</Label>
-            <Input value={professionalSpecialty} onChange={(e) => setProfessionalSpecialty(e.target.value)} className="mt-1" placeholder="Ex: Psicólogo - Clínica X" />
+            <h3 className="font-medium text-gray-900 dark:text-white">1) Identificação do Profissional</h3>
+            <Label className="text-gray-900 dark:text-gray-100">Nome completo</Label>
+            <Input value={professionalName} onChange={(e) => setProfessionalName(e.target.value)} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
+            <Label className="mt-2 text-gray-900 dark:text-gray-100">Registro profissional</Label>
+            <Input value={professionalRegistry} onChange={(e) => setProfessionalRegistry(e.target.value)} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
+            <Label className="mt-2 text-gray-900 dark:text-gray-100">Especialidade / Local</Label>
+            <Input value={professionalSpecialty} onChange={(e) => setProfessionalSpecialty(e.target.value)} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Ex: Psicólogo - Clínica X" />
           </div>
 
           <div>
-            <h3 className="font-medium">2) Identificação da Criança</h3>
-            <Label>Nome completo</Label>
-            <Input value={childName} onChange={(e) => setChildName(e.target.value)} className="mt-1" />
-            <Label className="mt-2">Data de Nascimento</Label>
-            <Input value={childBirthDate} onChange={(e) => setChildBirthDate(e.target.value)} className="mt-1" placeholder="DD/MM/AAAA" />
-            <Label className="mt-2">Número de matrícula</Label>
-            <Input value={childEnrollment} onChange={(e) => setChildEnrollment(e.target.value)} className="mt-1" />
-            <Label className="mt-2">Nome do responsável</Label>
-            <Input value={childGuardian} onChange={(e) => setChildGuardian(e.target.value)} className="mt-1" />
-            <Label className="mt-2">Diagnóstico (CID)</Label>
-            <Input value={childDiagnosis} onChange={(e) => setChildDiagnosis(e.target.value)} className="mt-1" placeholder="Ex: F84.0 – Transtorno do Espectro Autista" />
+            <h3 className="font-medium text-gray-900 dark:text-white">2) Identificação da Criança</h3>
+            <Label className="text-gray-900 dark:text-gray-100">Nome completo</Label>
+            <Input value={childName} onChange={(e) => setChildName(e.target.value)} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
+            <Label className="mt-2 text-gray-900 dark:text-gray-100">Data de Nascimento</Label>
+            <Input value={childBirthDate} onChange={(e) => setChildBirthDate(e.target.value)} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="DD/MM/AAAA" />
+            <Label className="mt-2 text-gray-900 dark:text-gray-100">Número de matrícula</Label>
+            <Input value={childEnrollment} onChange={(e) => setChildEnrollment(e.target.value)} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
+            <Label className="mt-2 text-gray-900 dark:text-gray-100">Nome do responsável</Label>
+            <Input value={childGuardian} onChange={(e) => setChildGuardian(e.target.value)} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
+            <Label className="mt-2 text-gray-900 dark:text-gray-100">Diagnóstico (CID)</Label>
+            <Input value={childDiagnosis} onChange={(e) => setChildDiagnosis(e.target.value)} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Ex: F84.0 – Transtorno do Espectro Autista" />
           </div>
 
           <div>
-            <h3 className="font-medium">3) Quadro Clínico</h3>
-            <Textarea value={clinicalDescription} onChange={(e) => setClinicalDescription(e.target.value)} rows={4} className="mt-1" placeholder="Descreva o quadro clínico e funcional" />
+            <h3 className="font-medium text-gray-900 dark:text-white">3) Quadro Clínico</h3>
+            <Textarea value={clinicalDescription} onChange={(e) => setClinicalDescription(e.target.value)} rows={4} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Descreva o quadro clínico e funcional" />
           </div>
 
           <div>
-            <h3 className="font-medium">4) Justificativa Técnica</h3>
-            <Textarea value={technicalJustification} onChange={(e) => setTechnicalJustification(e.target.value)} rows={4} className="mt-1" placeholder="Explique a necessidade do apoio escolar" />
+            <h3 className="font-medium text-gray-900 dark:text-white">4) Justificativa Técnica</h3>
+            <Textarea value={technicalJustification} onChange={(e) => setTechnicalJustification(e.target.value)} rows={4} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Explique a necessidade do apoio escolar" />
           </div>
 
           <div>
-            <h3 className="font-medium">5) Recomendações</h3>
-            <Textarea value={recommendations} onChange={(e) => setRecommendations(e.target.value)} rows={3} className="mt-1" placeholder="Indique ações práticas (adaptações, acompanhamento, periodicidade)" />
+            <h3 className="font-medium text-gray-900 dark:text-white">5) Recomendações</h3>
+            <Textarea value={recommendations} onChange={(e) => setRecommendations(e.target.value)} rows={3} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Indique ações práticas (adaptações, acompanhamento, periodicidade)" />
           </div>
 
           <div>
-            <h3 className="font-medium">6) Conclusão / Assinatura</h3>
-            <Textarea value={conclusion} onChange={(e) => setConclusion(e.target.value)} rows={2} className="mt-1" placeholder="Texto de conclusão (opcional)" />
+            <h3 className="font-medium text-gray-900 dark:text-white">6) Conclusão / Assinatura</h3>
+            <Textarea value={conclusion} onChange={(e) => setConclusion(e.target.value)} rows={2} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" placeholder="Texto de conclusão (opcional)" />
           </div>
 
           <div>
-            <Label>Fundamentação legal (separar por ; )</Label>
-            <Input value={legalReferences} onChange={(e) => setLegalReferences(e.target.value)} className="mt-1" />
+            <Label className="text-gray-900 dark:text-gray-100">Fundamenta quando legal (separar por ; )</Label>
+            <Input value={legalReferences} onChange={(e) => setLegalReferences(e.target.value)} className="mt-1 dark:bg-gray-900 dark:border-gray-700 dark:text-white" />
           </div>
 
           <div className="flex flex-col gap-2 mt-3">
@@ -167,16 +167,16 @@ export default function ReportGenerator() {
               <Button onClick={handleDownload} disabled={!preview} variant="ghost">Baixar .txt</Button>
             </div>
 
-            <label className="text-sm text-gray-700 mt-2 inline-flex items-center gap-2">
-              <input type="checkbox" checked={confirmedByProfessional} onChange={(e) => setConfirmedByProfessional(e.target.checked)} />
-              <span>Confirmo que um profissional habilitado revisará e assinará este relatório antes do uso oficial.</span>
+            <label className="text-sm text-gray-700 dark:text-gray-200 mt-2 inline-flex items-center gap-2">
+              <input type="checkbox" checked={confirmedByProfessional} onChange={(e) => setConfirmedByProfessional(e.target.checked)} className="w-4 h-4 text-theo-purple border-gray-300 rounded focus:ring-theo-purple dark:focus:ring-purple-600 dark:ring-offset-gray-800 focus:ring-2 dark:bg-gray-900 dark:border-gray-700" />
+              <span className="dark:text-gray-100">Confirmo que um profissional habilitado revisará e assinará este relatório antes do uso oficial.</span>
             </label>
           </div>
 
           {preview && (
             <div>
-              <h4 className="font-medium mt-4 mb-2">Pré-visualização</h4>
-              <pre className="whitespace-pre-wrap bg-gray-50 p-4 rounded border border-gray-200 text-sm">{preview}</pre>
+              <h4 className="font-medium mt-4 mb-2 text-gray-900 dark:text-white">Pré-visualização</h4>
+              <pre className="whitespace-pre-wrap bg-gray-50 dark:bg-gray-900 p-4 rounded border border-gray-200 dark:border-gray-700 text-sm dark:text-gray-100">{preview}</pre>
             </div>
           )}
         </div>

@@ -1,0 +1,32 @@
+<svg width="120" height="120" viewBox="0 0 120 120" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <!-- Background Circle -->
+  <circle cx="60" cy="60" r="60" fill="#E8E5F5"/>
+  
+  <!-- Headset -->
+  <path d="M35 55C35 42 45 32 60 32C75 32 85 42 85 55" stroke="#8B7FD9" stroke-width="4" stroke-linecap="round"/>
+  <circle cx="32" cy="58" r="6" fill="#8B7FD9"/>
+  <circle cx="88" cy="58" r="6" fill="#8B7FD9"/>
+  
+  <!-- Face -->
+  <circle cx="60" cy="65" r="28" fill="#FFE4D6"/>
+  
+  <!-- Hair -->
+  <path d="M40 50C40 38 48 30 60 30C72 30 80 38 80 50L80 55C80 55 70 48 60 48C50 48 40 55 40 55L40 50Z" fill="#6B5FC9"/>
+  
+  <!-- Happy Eyes -->
+  <path d="M48 62C50 60 54 60 56 62" stroke="#1F2937" stroke-width="2" stroke-linecap="round"/>
+  <path d="M64 62C66 60 70 60 72 62" stroke="#1F2937" stroke-width="2" stroke-linecap="round"/>
+  
+  <!-- Big Smile -->
+  <path d="M50 72C50 72 54 80 60 80C66 80 70 72 70 72" stroke="#1F2937" stroke-width="2.5" stroke-linecap="round"/>
+  
+  <!-- Sparkles -->
+  <path d="M25 45L27 47L29 45L27 43L25 45Z" fill="#FFD88A"/>
+  <path d="M90 40L92 42L94 40L92 38L90 40Z" fill="#FF9B85"/>
+  <path d="M85 70L87 72L89 70L87 68L85 70Z" fill="#7FD9B9"/>
+  
+  <!-- Mic -->
+  <path d="M60 82L60 88" stroke="#8B7FD9" stroke-width="2" stroke-linecap="round"/>
+  <rect x="57" y="88" width="6" height="8" rx="3" fill="#8B7FD9"/>
+</svg>
+
