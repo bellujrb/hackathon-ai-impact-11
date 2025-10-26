@@ -16,6 +16,9 @@
 
 ---
 
+###### Projeto deployado
+> [Theo Deployado](https://hackathon-impact-ai.vercel.app/)
+
 ### Descrição 
 
 Theo é uma plataforma web que ajuda mães de crianças atípicas a identificar direitos, gerar checklists passo-a-passo e produzir documentos formais (relatórios, requerimentos e cartas) necessários para solicitar benefícios públicos no Brasil. A plataforma combina OCR, um sistema multi-agente com LLMs e utilitários para geração de PDFs prontos para impressão.
