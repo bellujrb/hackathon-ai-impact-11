@@ -44,6 +44,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [lastAssistantType, setLastAssistantType] = useState<string | null>(null)
+  const [awaitingReportTarget, setAwaitingReportTarget] = useState(false)
 
   // Listener para eventos de setChatInput de outros componentes
   useEffect(() => {
@@ -106,7 +107,11 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: userInput, lastAssistant: lastAssistant ? lastAssistant.content : null, previousInteractionType: lastAssistantType }),
+        body: JSON.stringify({
+          message: userInput,
+          lastAssistant: lastAssistant ? lastAssistant.content : null,
+          previousInteractionType: awaitingReportTarget ? 'ask-report-target' : lastAssistantType,
+        }),
       })
 
       const data = await response.json()
@@ -114,9 +119,19 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
       // store the type returned by the API so next turn can be explicit about the interaction
       if (data && data.type) {
         setLastAssistantType(data.type)
+        // If server asked for report target, mark awaitingReportTarget so the next user reply is treated as target
+        if (data.type === 'ask-report-target') {
+          setAwaitingReportTarget(true)
+        } else {
+          setAwaitingReportTarget(false)
+        }
       } else {
         setLastAssistantType(null)
+        setAwaitingReportTarget(false)
       }
+
+      // After sending this user message, we've consumed any awaiting flag
+      setAwaitingReportTarget(false)
 
       const simulateStreaming = async (fullText: string) => {
         let currentText = ""

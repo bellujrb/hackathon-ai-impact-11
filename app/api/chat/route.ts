@@ -25,13 +25,21 @@ export async function POST(req: NextRequest) {
     const messageLower = message.toLowerCase()
 
     // Detect explicit request to GENERATE a report (multi-step flow)
+    // Accept variations with and without accents and short forms
     const isGenerateReportIntent =
       messageLower.includes("gerar relatório") ||
       messageLower.includes("gere um relatório") ||
       messageLower.includes("gerar um relatório") ||
       messageLower.includes("gere relatório") ||
       messageLower.includes("gerar laudo") ||
-      messageLower.includes("gere um laudo")
+      messageLower.includes("gere um laudo") ||
+      // without accent
+      messageLower.includes("gerar relatorio") ||
+      messageLower.includes("gere um relatorio") ||
+      messageLower.includes("gere relatorio") ||
+      messageLower.includes("relatorio") ||
+      messageLower.includes("gerar laudo") ||
+      messageLower.includes("gerar laudo")
 
     const isReportRequest =
       messageLower.includes("laudo") ||
@@ -43,7 +51,22 @@ export async function POST(req: NextRequest) {
   // treat the current message as the report target and generate the report.
   // Prefer an explicit flag from the client (previousInteractionType) when available.
   const lastAssistantLower = typeof lastAssistant === 'string' ? lastAssistant.toLowerCase() : ''
-  const assistantAskedReportTargetText = lastAssistantLower.includes('sobre qual assunto') || lastAssistantLower.includes('sobre qual benefício') || lastAssistantLower.includes('sobre o que') || lastAssistantLower.includes('sobre qual assunto/benefício')
+    // Match several ways the assistant may ask for the report subject (with/without accents)
+    const assistantAskedReportTargetText =
+      lastAssistantLower.includes('sobre qual assunto') ||
+      lastAssistantLower.includes('sobre qual benefício') ||
+      lastAssistantLower.includes('sobre o que') ||
+      lastAssistantLower.includes('sobre qual assunto/benefício') ||
+      lastAssistantLower.includes('o que voce gostaria') ||
+      lastAssistantLower.includes('o que você gostaria') ||
+      lastAssistantLower.includes('o que deseja que') ||
+      lastAssistantLower.includes('o que gostaria que constasse') ||
+      lastAssistantLower.includes('qual assunto') ||
+      lastAssistantLower.includes('qual beneficio') ||
+      // without accents
+      lastAssistantLower.includes('o que voce gostaria') ||
+      lastAssistantLower.includes('o que deseja que') ||
+      lastAssistantLower.includes('o que gostaria que constasse')
   const assistantAskedReportTarget = (typeof previousInteractionType === 'string' && previousInteractionType === 'ask-report-target') || assistantAskedReportTargetText
 
       // Se a mensagem contém "preciso de ajuda" ou é uma pergunta sobre uma etapa específica,
