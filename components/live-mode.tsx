@@ -1,12 +1,13 @@
 "use client"
 
 import { motion, AnimatePresence } from "framer-motion"
-import { X, Mic, MicOff, Loader2 } from "lucide-react"
+import { X, Mic, MicOff, Loader2, MessageSquare } from "lucide-react"
 import { TheoLiveAvatar } from "./theo-live-avatar"
 import { VideoPreview } from "./video-preview"
+import { ChatPopup } from "./chat-popup"
 import { useOpenAILiveConversation } from "@/lib/use-openai-live-conversation"
 import { useWebcamStream } from "@/lib/use-webcam-stream"
-import { useEffect } from "react"
+import { useEffect, useState } from "react"
 
 interface LiveModeProps {
   isOpen: boolean
@@ -14,6 +15,8 @@ interface LiveModeProps {
 }
 
 export function LiveMode({ isOpen, onClose }: LiveModeProps) {
+  const [isChatPopupOpen, setIsChatPopupOpen] = useState(false)
+  
   const {
     videoRef,
     isStreaming,
@@ -252,11 +255,11 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
                 <motion.button
                   onMouseUp={stopListening}
                   onTouchEnd={stopListening}
-                  className="relative w-24 h-24 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-2xl flex items-center justify-center transition-all"
+                  className="relative w-20 h-20 rounded-full bg-red-500 hover:bg-red-600 text-white shadow-2xl flex items-center justify-center transition-all"
                   whileTap={{ scale: 0.95 }}
                   aria-label="Solte para enviar"
                 >
-                  <MicOff className="h-10 w-10" />
+                  <MicOff className="h-8 w-8" />
                   
                   {/* Pulso animado */}
                   <motion.div
@@ -264,10 +267,6 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
                     animate={{ scale: [1, 1.3], opacity: [0.5, 0] }}
                     transition={{ repeat: Infinity, duration: 1.5 }}
                   />
-                  
-                  <span className="absolute -bottom-8 text-sm font-medium text-gray-900">
-                    Solte para enviar
-                  </span>
                 </motion.button>
               ) : (
                 <motion.button
@@ -277,7 +276,7 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
                     conversationState === "processing" ||
                     conversationState === "speaking"
                   }
-                  className={`relative w-24 h-24 rounded-full shadow-2xl flex items-center justify-center transition-all ${
+                  className={`relative w-20 h-20 rounded-full shadow-2xl flex items-center justify-center transition-all ${
                     conversationState === "idle"
                       ? "bg-theo-purple hover:bg-theo-purple-dark text-white"
                       : "bg-gray-300 text-gray-500 cursor-not-allowed"
@@ -287,23 +286,48 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
                 >
                   {conversationState === "processing" ||
                   conversationState === "speaking" ? (
-                    <Loader2 className="h-10 w-10 animate-spin" />
+                    <Loader2 className="h-8 w-8 animate-spin" />
                   ) : (
-                    <Mic className="h-10 w-10" />
+                    <Mic className="h-8 w-8" />
                   )}
-                  
-                  <span className="absolute -bottom-8 text-sm font-medium text-gray-900">
-                    {conversationState === "idle"
-                      ? "Segurar para falar"
-                      : conversationState === "processing"
-                      ? "Processando..."
-                      : "Theo falando..."}
-                  </span>
                 </motion.button>
               )}
             </div>
           </div>
+
+          {/* Floating Chat Button */}
+          <motion.button
+            onClick={() => setIsChatPopupOpen(true)}
+            className="absolute bottom-24 right-8 w-14 h-14 bg-theo-coral hover:bg-theo-coral-dark text-white rounded-full shadow-2xl flex items-center justify-center transition-all group"
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.95 }}
+            aria-label="Ver mensagens"
+            initial={{ opacity: 0, scale: 0 }}
+            animate={{ opacity: 1, scale: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <MessageSquare className="h-6 w-6" />
+            
+            {/* Badge de contagem */}
+            {messages.length > 0 && (
+              <motion.div
+                className="absolute -top-1 -right-1 w-6 h-6 bg-theo-purple text-white text-xs font-bold rounded-full flex items-center justify-center shadow-lg"
+                initial={{ scale: 0 }}
+                animate={{ scale: 1 }}
+                transition={{ type: "spring", stiffness: 500, damping: 15 }}
+              >
+                {messages.length}
+              </motion.div>
+            )}
+          </motion.button>
         </motion.div>
+
+        {/* Chat Popup */}
+        <ChatPopup
+          isOpen={isChatPopupOpen}
+          onClose={() => setIsChatPopupOpen(false)}
+          messages={messages}
+        />
       </motion.div>
     </AnimatePresence>
   )
