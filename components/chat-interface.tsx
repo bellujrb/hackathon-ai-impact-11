@@ -6,6 +6,11 @@ import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
 import { Send, X } from "lucide-react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
+import ReactMarkdown from 'react-markdown'
+
+interface MarkdownComponentProps {
+  children: React.ReactNode
+}
 import type { BenefitRequest } from "@/app/page"
 
 interface Message {
@@ -14,15 +19,42 @@ interface Message {
   content: string
 }
 
-interface ChatInterfaceProps {
-  onCreateBenefitRequest: (type: BenefitRequest["type"], name: string) => void
-  askingAboutBenefit: BenefitRequest | null
-  onClearAskingAbout: () => void
+interface ChecklistItem {
+  id: string
+  title: string
+  description: string
+  details: string
+  completed: boolean
 }
 
-export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onClearAskingAbout }: ChatInterfaceProps) {
+interface ChatInterfaceProps {
+  onCreateBenefitRequest: (type: BenefitRequest["type"], name: string, checklist?: ChecklistItem[]) => void
+  askingAboutBenefit: BenefitRequest | null
+  onClearAskingAbout: () => void
+  onSetInput?: (text: string) => void // Callback para que outros componentes possam definir o input
+}
+
+export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onClearAskingAbout, onSetInput }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
+
+  // Listener para eventos de setChatInput de outros componentes
+  useEffect(() => {
+    const handleSetChatInput = (event: Event) => {
+      const customEvent = event as CustomEvent<string>
+      if (customEvent.detail) {
+        setInput(customEvent.detail)
+        if (onSetInput) {
+          onSetInput(customEvent.detail)
+        }
+      }
+    }
+
+    window.addEventListener('setChatInput', handleSetChatInput as EventListener)
+    return () => {
+      window.removeEventListener('setChatInput', handleSetChatInput as EventListener)
+    }
+  }, [onSetInput])
 
   useEffect(() => {
     if (askingAboutBenefit) {
@@ -48,13 +80,14 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
 
     setMessages([...messages, newMessage])
 
-    // Loading message
-    const loadingMessage: Message = {
-      id: (Date.now() + 1).toString(),
+    // Criar mensagem de streaming
+    const assistantMessageId = (Date.now() + 1).toString()
+    const assistantMessage: Message = {
+      id: assistantMessageId,
       role: "assistant",
-      content: "Processando...",
+      content: "",
     }
-    setMessages((prev) => [...prev, loadingMessage])
+    setMessages((prev) => [...prev, assistantMessage])
 
     try {
       // Chamar API para processar com LangGraph/Gemini
@@ -68,26 +101,29 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
 
       const data = await response.json()
 
-      // Remover mensagem de loading
-      setMessages((prev) => prev.filter((msg) => msg.id !== loadingMessage.id))
-
-      // Adicionar resposta do assistente
-      const assistantMessage: Message = {
-        id: (Date.now() + 2).toString(),
-        role: "assistant",
-        content: data.response,
+      const simulateStreaming = async (fullText: string) => {
+        let currentText = ""
+        for (let i = 0; i < fullText.length; i++) {
+          currentText += fullText[i]
+          setMessages((prev) =>
+            prev.map((msg) =>
+              msg.id === assistantMessageId ? { ...msg, content: currentText } : msg
+            )
+          )
+          await new Promise((resolve) => setTimeout(resolve, 15))
+        }
       }
-      setMessages((prev) => [...prev, assistantMessage])
 
-      // Criar benefício se identificado
-      if (data.benefitType) {
-        onCreateBenefitRequest(data.benefitType, data.benefitName)
+      await simulateStreaming(data.response)
+
+      if (data.benefitType && data.checklist) {
+        onCreateBenefitRequest(data.benefitType, data.benefitName, data.checklist.items)
       }
     } catch (error) {
       console.error("Error sending message:", error)
       
-      // Remover mensagem de loading
-      setMessages((prev) => prev.filter((msg) => msg.id !== loadingMessage.id))
+      // Remover mensagem de streaming
+      setMessages((prev) => prev.filter((msg) => msg.id !== assistantMessageId))
 
       // Mensagem de erro
       const errorMessage: Message = {
@@ -158,11 +194,15 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                     message.role === "user" ? "bg-gray-900 text-white border-0" : "border-gray-200 bg-white"
                   }`}
                 >
-                  <p
-                    className={`text-sm leading-relaxed whitespace-pre-line ${message.role === "user" ? "text-white" : "text-gray-900"}`}
-                  >
-                    {message.content}
-                  </p>
+                  {message.role === "assistant" ? (
+                    <div className="text-sm leading-relaxed text-gray-900 prose prose-sm max-w-none">
+                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                    </div>
+                  ) : (
+                    <p className="text-sm leading-relaxed whitespace-pre-line text-white">
+                      {message.content}
+                    </p>
+                  )}
                 </Card>
               </div>
             ))}

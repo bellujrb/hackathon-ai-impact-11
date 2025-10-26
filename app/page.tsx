@@ -4,26 +4,40 @@ import { useState } from "react"
 import { Sidebar } from "@/components/sidebar"
 import { ChatInterface } from "@/components/chat-interface"
 import { ChecklistSidebar } from "@/components/checklist-sidebar"
+import { DocumentVerifier } from "@/components/document-verifier"
+import { DesignationRequest } from "@/components/designation-request"
 import { SidebarProvider } from "@/components/ui/sidebar"
+
+export interface ChecklistItem {
+  id: string
+  title: string
+  description: string
+  details: string
+  completed: boolean
+}
 
 export type BenefitRequest = {
   id: string
   name: string
   type: "bpc" | "passe-livre" | "isencao-ipva" | "apoio-educacional" | "outros"
   createdAt: Date
+  checklist?: ChecklistItem[] // Checklist gerado pela IA
 }
 
 export default function Home() {
   const [benefitRequests, setBenefitRequests] = useState<BenefitRequest[]>([])
   const [askingAboutBenefit, setAskingAboutBenefit] = useState<BenefitRequest | null>(null)
   const [selectedBenefit, setSelectedBenefit] = useState<BenefitRequest | null>(null)
+  const [chatInputValue, setChatInputValue] = useState("")
+  const [selectedTab, setSelectedTab] = useState<"inicio" | "verificador" | "designacoes">("inicio")
 
-  const handleCreateBenefitRequest = (type: BenefitRequest["type"], name: string) => {
+  const handleCreateBenefitRequest = (type: BenefitRequest["type"], name: string, checklist?: ChecklistItem[]) => {
     const newRequest: BenefitRequest = {
       id: Date.now().toString(),
       name,
       type,
       createdAt: new Date(),
+      checklist,
     }
     setBenefitRequests((prev) => [...prev, newRequest])
   }
@@ -46,13 +60,20 @@ export default function Home() {
           benefitRequests={benefitRequests}
           selectedBenefit={selectedBenefit}
           onSelectBenefit={setSelectedBenefit}
+          selectedTab={selectedTab}
+          onSelectTab={setSelectedTab}
         />
         <main className="flex-1 flex flex-col">
-          <ChatInterface
-            onCreateBenefitRequest={handleCreateBenefitRequest}
-            askingAboutBenefit={askingAboutBenefit}
-            onClearAskingAbout={() => setAskingAboutBenefit(null)}
-          />
+          {selectedTab === "inicio" && (
+            <ChatInterface
+              onCreateBenefitRequest={handleCreateBenefitRequest}
+              askingAboutBenefit={askingAboutBenefit}
+              onClearAskingAbout={() => setAskingAboutBenefit(null)}
+              onSetInput={(text) => setChatInputValue(text)}
+            />
+          )}
+          {selectedTab === "verificador" && <DocumentVerifier />}
+          {selectedTab === "designacoes" && <DesignationRequest />}
         </main>
         <ChecklistSidebar
           benefitRequests={benefitRequests}
@@ -60,6 +81,7 @@ export default function Home() {
           onSelectBenefit={setSelectedBenefit}
           onAskAboutBenefit={handleAskAboutBenefit}
           onDeleteBenefit={handleDeleteBenefit}
+          chatInputValue={chatInputValue}
         />
       </div>
     </SidebarProvider>

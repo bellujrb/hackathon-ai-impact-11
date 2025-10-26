@@ -4,16 +4,8 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, ChevronDown, ChevronRight, MessageCircle, Trash2 } from "lucide-react"
-import type { BenefitRequest } from "@/app/page"
-
-interface ChecklistItem {
-  id: string
-  title: string
-  description: string
-  details: string
-  completed: boolean
-}
+import { CheckCircle2, ChevronDown, ChevronRight, MessageCircle, Trash2, HelpCircle } from "lucide-react"
+import type { BenefitRequest, ChecklistItem } from "@/app/page"
 
 interface ChecklistSidebarProps {
   benefitRequests: BenefitRequest[]
@@ -21,8 +13,11 @@ interface ChecklistSidebarProps {
   onSelectBenefit: (benefit: BenefitRequest | null) => void
   onAskAboutBenefit: (benefit: BenefitRequest) => void
   onDeleteBenefit: (benefit: BenefitRequest) => void
+  chatInputValue?: string
 }
 
+// REMOVIDO - Função mockada antiga, agora usa o checklist da IA
+/*
 const getChecklistForBenefit = (type: BenefitRequest["type"]): ChecklistItem[] => {
   const checklists = {
     bpc: [
@@ -237,6 +232,7 @@ const getChecklistForBenefit = (type: BenefitRequest["type"]): ChecklistItem[] =
 
   return checklists[type] || checklists.outros
 }
+*/
 
 export function ChecklistSidebar({
   benefitRequests,
@@ -244,17 +240,27 @@ export function ChecklistSidebar({
   onSelectBenefit,
   onAskAboutBenefit,
   onDeleteBenefit,
+  chatInputValue = "",
 }: ChecklistSidebarProps) {
   const [checklistStates, setChecklistStates] = useState<Record<string, ChecklistItem[]>>({})
   const [expandedItems, setExpandedItems] = useState<Record<string, string | null>>({})
 
   const getChecklistItems = (benefit: BenefitRequest): ChecklistItem[] => {
-    if (!checklistStates[benefit.id]) {
-      const items = getChecklistForBenefit(benefit.type)
-      setChecklistStates((prev) => ({ ...prev, [benefit.id]: items }))
-      return items
+    // Usa o checklist da IA se disponível, senão verifica se está no state
+    if (benefit.checklist && benefit.checklist.length > 0) {
+      if (!checklistStates[benefit.id]) {
+        setChecklistStates((prev) => ({ ...prev, [benefit.id]: benefit.checklist! }))
+      }
+      return checklistStates[benefit.id] || benefit.checklist
     }
-    return checklistStates[benefit.id]
+    
+    // Fallback para state existente
+    if (checklistStates[benefit.id]) {
+      return checklistStates[benefit.id]
+    }
+    
+    // Retorna array vazio se não há checklist
+    return []
   }
 
   const toggleItem = (benefitId: string, itemId: string) => {
@@ -391,7 +397,24 @@ export function ChecklistSidebar({
                                 </div>
                               )}
                             </div>
-                            {item.completed && <CheckCircle2 className="h-4 w-4 text-gray-400 flex-shrink-0" />}
+                            <div className="flex items-center gap-1">
+                              <Button
+                                variant="ghost"
+                                size="sm"
+                                onClick={(e) => {
+                                  e.stopPropagation()
+                                  const helpMessage = `Preciso de ajuda com a etapa "${item.title}" do checklist de ${benefit.name}. ${item.description}. Como posso proceder?`
+                                  // Adicionar mensagem no input do chat
+                                  const event = new CustomEvent('setChatInput', { detail: helpMessage })
+                                  window.dispatchEvent(event)
+                                }}
+                                className="h-6 w-6 p-0 hover:bg-blue-100 hover:text-blue-600 flex-shrink-0"
+                                title="Precisar de ajuda com esta etapa"
+                              >
+                                <HelpCircle className="h-3 w-3" />
+                              </Button>
+                              {item.completed && <CheckCircle2 className="h-4 w-4 text-gray-400 flex-shrink-0" />}
+                            </div>
                           </div>
                         </div>
                       ))}
