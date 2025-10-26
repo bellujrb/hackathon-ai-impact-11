@@ -36,10 +36,19 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         } 
       })
 
-      // Criar MediaRecorder
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : 'audio/webm'
+      // Criar MediaRecorder com formato compatível
+      // Tentar usar formatos em ordem de preferência para melhor compatibilidade com Whisper
+      let mimeType = 'audio/webm' // fallback
+      
+      if (MediaRecorder.isTypeSupported('audio/mp4')) {
+        mimeType = 'audio/mp4'
+      } else if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus'
+      } else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm'
+      }
+      
+      console.log('Using audio format:', mimeType)
       
       const mediaRecorder = new MediaRecorder(stream, { mimeType })
       mediaRecorderRef.current = mediaRecorder
