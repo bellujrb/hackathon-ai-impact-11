@@ -118,6 +118,9 @@ export function useGeminiLiveConversation({
       ])
 
       // 2. Enviar para Gemini Multimodal (áudio transcrito + frames de vídeo)
+      let assistantMessage = ""
+      
+      // Tentar usar Gemini Multimodal primeiro (com visão)
       const geminiResponse = await fetch("/api/gemini-multimodal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -127,12 +130,36 @@ export function useGeminiLiveConversation({
         }),
       })
 
-      if (!geminiResponse.ok) {
-        throw new Error("Erro ao processar com Gemini")
+      if (geminiResponse.ok) {
+        const geminiData = await geminiResponse.json()
+        if (geminiData.success && geminiData.response) {
+          assistantMessage = geminiData.response
+        }
       }
+      
+      // Fallback: usar API de chat normal se Gemini Multimodal falhar
+      if (!assistantMessage) {
+        console.warn("Gemini Multimodal indisponível, usando chat normal como fallback")
+        
+        const chatResponse = await fetch("/api/chat", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            message: userMessage,
+            history: messages.map(msg => ({
+              role: msg.role,
+              content: msg.content,
+            })),
+          }),
+        })
 
-      const geminiData = await geminiResponse.json()
-      const assistantMessage = geminiData.response
+        if (!chatResponse.ok) {
+          throw new Error("Erro ao processar resposta")
+        }
+
+        const chatData = await chatResponse.json()
+        assistantMessage = chatData.message || chatData.response || ""
+      }
 
       if (!assistantMessage) {
         throw new Error("Theo não respondeu")

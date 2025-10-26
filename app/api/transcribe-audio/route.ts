@@ -15,13 +15,22 @@ async function transcribeWithWhisper(audioBuffer: Buffer, mimeType: string = "au
   const extensionMap: Record<string, string> = {
     "audio/webm": "webm",
     "audio/mp4": "m4a",
+    "audio/mp4;codecs=opus": "m4a",  // MP4 com Opus → m4a
     "audio/mpeg": "mp3",
     "audio/wav": "wav",
     "audio/ogg": "ogg",
     "audio/webm;codecs=opus": "webm",
   }
   
-  const extension = extensionMap[mimeType] || "webm"
+  // Extração de extensão: verificar se tem codec e usar base do MIME type
+  let extension = extensionMap[mimeType]
+  
+  if (!extension) {
+    // Tentar extrair tipo base (antes do ;)
+    const baseType = mimeType.split(';')[0].trim()
+    extension = extensionMap[baseType] || "webm"
+  }
+  
   const filename = `audio.${extension}`
   
   console.log(`Enviando para Whisper: ${filename} (${mimeType})`)
@@ -68,6 +77,21 @@ export async function POST(req: NextRequest) {
     const mimeType = audioFile.type || "audio/webm"
     
     console.log(`Áudio recebido: ${audioFile.name}, tipo: ${mimeType}, tamanho: ${audioBuffer.length} bytes`)
+
+    // Validar tamanho do áudio
+    if (audioBuffer.length === 0) {
+      return NextResponse.json({
+        success: false,
+        error: "Áudio vazio. Por favor, grave novamente.",
+      }, { status: 400 })
+    }
+    
+    if (audioBuffer.length < 100) {
+      return NextResponse.json({
+        success: false,
+        error: "Áudio muito curto. Fale por mais tempo.",
+      }, { status: 400 })
+    }
 
     let transcription = ""
 
