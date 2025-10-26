@@ -1,0 +1,44 @@
+"use client"
+
+import { Home } from "lucide-react"
+import {
+  Sidebar as SidebarUI,
+  SidebarContent,
+  SidebarHeader,
+  SidebarMenu,
+  SidebarMenuItem,
+  SidebarMenuButton,
+} from "@/components/ui/sidebar"
+import type { BenefitRequest } from "@/app/page"
+
+interface SidebarProps {
+  benefitRequests: BenefitRequest[]
+  selectedBenefit: BenefitRequest | null
+  onSelectBenefit: (benefit: BenefitRequest | null) => void
+}
+
+export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit }: SidebarProps) {
+  return (
+    <SidebarUI className="border-r border-gray-200 bg-white">
+      <SidebarHeader className="border-b border-gray-200 p-6">
+        <h1 className="text-xl font-semibold text-gray-900">Benefícios</h1>
+        <p className="mt-1 text-xs text-gray-500">Assistente para mães atípicas</p>
+      </SidebarHeader>
+
+      <SidebarContent className="p-4">
+        <SidebarMenu>
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={() => onSelectBenefit(null)}
+              isActive={!selectedBenefit}
+              className="w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-gray-100 data-[active=true]:bg-gray-900 data-[active=true]:text-white"
+            >
+              <Home className="h-5 w-5" />
+              <span>Início</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+        </SidebarMenu>
+      </SidebarContent>
+    </SidebarUI>
+  )
+}

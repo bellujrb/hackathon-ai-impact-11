@@ -1,0 +1,210 @@
+"use client"
+
+import { useState, useEffect } from "react"
+import { Button } from "@/components/ui/button"
+import { Textarea } from "@/components/ui/textarea"
+import { Card } from "@/components/ui/card"
+import { Send, X } from "lucide-react"
+import { SidebarTrigger } from "@/components/ui/sidebar"
+import type { BenefitRequest } from "@/app/page"
+
+interface Message {
+  id: string
+  role: "user" | "assistant"
+  content: string
+}
+
+interface ChatInterfaceProps {
+  onCreateBenefitRequest: (type: BenefitRequest["type"], name: string) => void
+  askingAboutBenefit: BenefitRequest | null
+  onClearAskingAbout: () => void
+}
+
+export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onClearAskingAbout }: ChatInterfaceProps) {
+  const [messages, setMessages] = useState<Message[]>([])
+  const [input, setInput] = useState("")
+
+  useEffect(() => {
+    if (askingAboutBenefit) {
+      setInput(`Tenho uma dúvida sobre o ${askingAboutBenefit.name}. `)
+    }
+  }, [askingAboutBenefit])
+
+  const handleSend = async () => {
+    if (!input.trim()) return
+
+    const userInput = input.trim()
+    setInput("")
+    
+    if (askingAboutBenefit) {
+      onClearAskingAbout()
+    }
+
+    const newMessage: Message = {
+      id: Date.now().toString(),
+      role: "user",
+      content: userInput,
+    }
+
+    setMessages([...messages, newMessage])
+
+    // Loading message
+    const loadingMessage: Message = {
+      id: (Date.now() + 1).toString(),
+      role: "assistant",
+      content: "Processando...",
+    }
+    setMessages((prev) => [...prev, loadingMessage])
+
+    try {
+      // Chamar API para processar com LangGraph/Gemini
+      const response = await fetch("/api/chat", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ message: userInput }),
+      })
+
+      const data = await response.json()
+
+      // Remover mensagem de loading
+      setMessages((prev) => prev.filter((msg) => msg.id !== loadingMessage.id))
+
+      // Adicionar resposta do assistente
+      const assistantMessage: Message = {
+        id: (Date.now() + 2).toString(),
+        role: "assistant",
+        content: data.response,
+      }
+      setMessages((prev) => [...prev, assistantMessage])
+
+      // Criar benefício se identificado
+      if (data.benefitType) {
+        onCreateBenefitRequest(data.benefitType, data.benefitName)
+      }
+    } catch (error) {
+      console.error("Error sending message:", error)
+      
+      // Remover mensagem de loading
+      setMessages((prev) => prev.filter((msg) => msg.id !== loadingMessage.id))
+
+      // Mensagem de erro
+      const errorMessage: Message = {
+        id: (Date.now() + 3).toString(),
+        role: "assistant",
+        content: "Desculpe, ocorreu um erro. Tente novamente.",
+      }
+      setMessages((prev) => [...prev, errorMessage])
+    }
+  }
+
+  const handleQuickAction = (type: BenefitRequest["type"], name: string, question: string) => {
+    setInput(question)
+    setTimeout(() => handleSend(), 100)
+  }
+
+  return (
+    <div className="flex h-full flex-col bg-white">
+      <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-4">
+        <SidebarTrigger />
+      </div>
+
+      {/* Messages Area */}
+      <div className="flex-1 overflow-y-auto p-6">
+        {messages.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center px-4">
+            <h1 className="mb-4 text-center text-4xl font-bold text-gray-900 text-balance">
+              Como posso te ajudar a acessar benefícios?
+            </h1>
+            <p className="mb-12 max-w-2xl text-center text-gray-600 leading-relaxed">
+              Pergunte sobre qualquer benefício e vou criar um checklist detalhado com todas as etapas que você precisa
+              seguir.
+            </p>
+            <div className="grid gap-4 sm:grid-cols-3 max-w-3xl w-full">
+              <Card
+                className="cursor-pointer border-gray-200 p-5 transition-all hover:border-gray-900 hover:shadow-md"
+                onClick={() => handleQuickAction("bpc", "BPC/LOAS", "Quero solicitar o BPC/LOAS para meu filho")}
+              >
+                <h3 className="text-base font-semibold text-gray-900 mb-1">BPC/LOAS</h3>
+                <p className="text-xs text-gray-600">Benefício de Prestação Continuada</p>
+              </Card>
+              <Card
+                className="cursor-pointer border-gray-200 p-5 transition-all hover:border-gray-900 hover:shadow-md"
+                onClick={() =>
+                  handleQuickAction("passe-livre", "Passe Livre", "Como solicitar o passe livre intermunicipal?")
+                }
+              >
+                <h3 className="text-base font-semibold text-gray-900 mb-1">Passe Livre</h3>
+                <p className="text-xs text-gray-600">Transporte gratuito</p>
+              </Card>
+              <Card
+                className="cursor-pointer border-gray-200 p-5 transition-all hover:border-gray-900 hover:shadow-md"
+                onClick={() =>
+                  handleQuickAction("isencao-ipva", "Isenção de IPVA", "Quero isenção de IPVA para pessoa autista")
+                }
+              >
+                <h3 className="text-base font-semibold text-gray-900 mb-1">Isenção IPVA</h3>
+                <p className="text-xs text-gray-600">Isenção de impostos</p>
+              </Card>
+            </div>
+          </div>
+        ) : (
+          <div className="mx-auto max-w-3xl space-y-4">
+            {messages.map((message) => (
+              <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+                <Card
+                  className={`max-w-[85%] p-4 ${
+                    message.role === "user" ? "bg-gray-900 text-white border-0" : "border-gray-200 bg-white"
+                  }`}
+                >
+                  <p
+                    className={`text-sm leading-relaxed whitespace-pre-line ${message.role === "user" ? "text-white" : "text-gray-900"}`}
+                  >
+                    {message.content}
+                  </p>
+                </Card>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="border-t border-gray-200 p-6">
+        <div className="mx-auto max-w-3xl">
+          {askingAboutBenefit && (
+            <div className="mb-3 flex items-center justify-between rounded-lg bg-gray-100 px-4 py-2 text-sm">
+              <span className="text-gray-700">
+                Perguntando sobre: <span className="font-semibold">{askingAboutBenefit.name}</span>
+              </span>
+              <Button variant="ghost" size="sm" onClick={onClearAskingAbout} className="h-6 w-6 p-0 hover:bg-gray-200">
+                <X className="h-4 w-4" />
+              </Button>
+            </div>
+          )}
+          <div className="flex gap-3">
+            <Textarea
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" && !e.shiftKey) {
+                  e.preventDefault()
+                  handleSend()
+                }
+              }}
+              placeholder="Ex: Quero solicitar o BPC/LOAS para meu filho"
+              className="min-h-[60px] resize-none border-gray-300 focus:border-gray-900 focus:ring-gray-900"
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim()}
+              className="h-[60px] bg-gray-900 px-6 hover:bg-gray-800"
+            >
+              <Send className="h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+}
