@@ -19,7 +19,7 @@ async function synthesizeWithOpenAI(text: string): Promise<ArrayBuffer> {
     body: JSON.stringify({
       model: "tts-1-hd", // Modelo HD de alta qualidade
       input: text,
-      voice: "nova", // Voz feminina, clara e calorosa (perfeita para Theo)
+      voice: "onyx", // Voz masculina profunda e calorosa (perfeita para Theo)
       speed: 0.95, // Velocidade natural
       response_format: "mp3",
     }),
