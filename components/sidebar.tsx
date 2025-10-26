@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, FileCheck, Scale, HeadphonesIcon } from "lucide-react"
+import { Home, FileCheck, Scale, HeadphonesIcon, Video } from "lucide-react"
 import {
   Sidebar as SidebarUI,
   SidebarContent,
@@ -19,9 +19,10 @@ interface SidebarProps {
   onSelectBenefit: (benefit: BenefitRequest | null) => void
   selectedTab: "inicio" | "verificador" | "designacoes"
   onSelectTab: (tab: "inicio" | "verificador" | "designacoes") => void
+  onOpenLiveMode: () => void
 }
 
-export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, selectedTab, onSelectTab }: SidebarProps) {
+export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, selectedTab, onSelectTab, onOpenLiveMode }: SidebarProps) {
   return (
     <SidebarUI className="border-r border-theo-lavanda bg-theo-lavanda-light">
       <SidebarHeader className="border-b border-theo-lavanda p-6">
@@ -78,6 +79,16 @@ export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, sel
             >
               <Scale className="h-5 w-5" />
               <span>Designações Oficiais</span>
+            </SidebarMenuButton>
+          </SidebarMenuItem>
+          
+          <SidebarMenuItem>
+            <SidebarMenuButton
+              onClick={onOpenLiveMode}
+              className="w-full justify-start gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-theo-lavanda bg-gradient-to-r from-theo-coral/10 to-theo-purple/10 hover:from-theo-coral/20 hover:to-theo-purple/20 border-2 border-theo-purple/30"
+            >
+              <Video className="h-5 w-5 text-theo-purple" />
+              <span className="font-semibold text-theo-purple">Modo Live</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>
