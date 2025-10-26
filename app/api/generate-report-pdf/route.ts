@@ -1,4 +1,4 @@
-import PDFDocument from 'pdfkit'
+// import PDFDocument from 'pdfkit'
 import { NextResponse } from 'next/server'
 
 export async function POST(req: Request) {
@@ -6,6 +6,13 @@ export async function POST(req: Request) {
     const body = await req.json()
     const { title, content, filename } = body || {}
 
+    // Temporarily disabled due to pdfkit build issues
+    return NextResponse.json({ 
+      error: 'PDF generation temporarily disabled',
+      message: 'This feature will be available soon'
+    }, { status: 503 })
+
+    /* 
     const doc = new PDFDocument({ size: 'A4', margin: 50 })
 
     const chunks: Uint8Array[] = []
@@ -64,6 +71,7 @@ export async function POST(req: Request) {
         'Content-Disposition': `attachment; filename="${filename || 'relatorio'}.pdf"`,
       },
     })
+    */
   } catch (err) {
     console.error('Error generating PDF:', err)
     return NextResponse.json({ error: 'Failed to generate PDF' }, { status: 500 })
