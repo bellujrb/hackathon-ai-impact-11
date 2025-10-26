@@ -24,7 +24,6 @@
     "start": "next start"
   },
   "dependencies": {
-    "@emailjs/browser": "^4.4.1",
     "@google-cloud/documentai": "^9.5.0",
     "@google-cloud/speech": "^7.2.1",
     "@google-cloud/text-to-speech": "^6.4.0",

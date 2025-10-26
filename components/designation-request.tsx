@@ -6,19 +6,9 @@ import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { FileText, Upload, ChevronRight, ChevronLeft, CheckCircle2, Clock, Send } from "lucide-react"
-import emailjs from "@emailjs/browser"
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog"
+import { FileText, Upload, ChevronRight, ChevronLeft, CheckCircle2, Clock } from "lucide-react"
 
 export function DesignationRequest() {
-  const RECIPIENT_EMAIL = "fmarcus549@gmail.com"
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     benefitType: "",
@@ -38,128 +28,58 @@ export function DesignationRequest() {
     documents: [] as File[],
     observations: ""
   })
+
   const BENEFIT_TYPES = [
     { id: "bpc", name: "BPC/LOAS", description: "Benefício de Prestação Continuada da Assistência Social" },
     { id: "passe-livre", name: "Passe Livre", description: "Transporte gratuito para tratamento e terapias" },
     { id: "isencao-ipva", name: "Isenção de IPVA", description: "Isenção total do Imposto sobre Propriedade de Veículos" },
     { id: "professor-apoio", name: "Professor de Apoio", description: "Atendimento Educacional Especializado" }
   ]
+
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files)
       setFormData(prev => ({ ...prev, documents: [...prev.documents, ...files] }))
     }
-  };
+  }
+
   const removeDocument = (index: number) => {
     setFormData(prev => ({ ...prev, documents: prev.documents.filter((_, i) => i !== index) }))
   }
+
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
-  const [isConfirming, setIsConfirming] = useState(false)
 
-  const benefitName = BENEFIT_TYPES.find(b => b.id === formData.benefitType)?.name ?? "Não especificado"
-  const emailBody = `Prezados(as) Defensores(as) Públicos(as),
-
-Eu, ${formData.applicantName}, portador(a) do CPF nº ${formData.applicantCPF} e RG nº ${formData.applicantRG}, residente no endereço ${formData.applicantAddress}, venho por meio deste e-mail solicitar respeitosamente assistência jurídica gratuita.
-
-A presente solicitação visa garantir o direito ao benefício de "${benefitName}" para meu/minha filho(a), ${formData.beneficiaryName}, de ${formData.beneficiaryAge} anos, diagnosticado(a) com Transtorno do Espectro Autista (TEA).
-
-Nossa renda familiar mensal é de R$ ${formData.monthlyIncome}, composta por ${formData.familyComposition}, o que nos enquadra nos critérios para o atendimento pela Defensoria Pública. Enfrentamos dificuldades para acessar o benefício, que é fundamental para o desenvolvimento e qualidade de vida do(a) meu/minha filho(a).
-
-Diante do exposto, solicito o auxílio de um(a) Defensor(a) Público(a) para me representar e orientar no processo administrativo ou judicial para a obtenção do referido benefício, assegurando que os direitos do(a) beneficiário(a) sejam plenamente atendidos conforme a legislação vigente.
-
-Seguem anexos os documentos necessários para a análise do caso. Coloco-me à inteira disposição para fornecer quaisquer informações adicionais.
-
-Agradeço a atenção.
-
-Atenciosamente,
-
-${formData.applicantName}
-Telefone: ${formData.applicantPhone}
-E-mail: ${formData.applicantEmail}`
-
-  // Nova lógica para envio de e-mail
   const handleSubmit = async () => {
     setIsSubmitting(true)
-
-    // Essa função converte arquivos para base64 para envio via EmailJS
-    function toBase64(file: File): Promise<string> {
-      return new Promise((resolve, reject) => {
-        const reader = new FileReader()
-        reader.readAsDataURL(file)
-        reader.onload = () => resolve(reader.result as string)
-        reader.onerror = error => reject(error)
-      })
-    }
-    // Monta o corpo do e-mail
-    const emailData: any = {
-      email: RECIPIENT_EMAIL,
-      benefit_type: benefitName,
-      applicant_name: formData.applicantName,
-      applicant_email: formData.applicantEmail,
-      email_body: emailBody, // Corpo do e-mail elaborado
-    }
-
-    // Adiciona documentos como base64 tipicamente (envio até ~2MB cada no EmailJS)
-    for (let i = 0; i < formData.documents.length; i++) {
-      emailData[`document_${i + 1}`] = await toBase64(formData.documents[i])
-      emailData[`document_name_${i + 1}`] = formData.documents[i].name
-    }
-
-    // ENVIAR usando EmailJS
-    // Preencha seus valores do serviço!
-    try {
-      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID
-      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID
-      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
-
-      if (!serviceId || !templateId || !publicKey) {
-        const missing = [
-          !serviceId && "NEXT_PUBLIC_EMAILJS_SERVICE_ID",
-          !templateId && "NEXT_PUBLIC_EMAILJS_TEMPLATE_ID",
-          !publicKey && "NEXT_PUBLIC_EMAILJS_PUBLIC_KEY",
-        ].filter(Boolean).join(", ")
-
-        throw new Error(`Variáveis de ambiente ausentes: ${missing}. Verifique seu .env e reinicie a aplicação.`)
-      }
-      
-      await emailjs.send(
-        serviceId,
-        templateId,
-        emailData,
-        publicKey
-      )
-      setSubmitted(true)
-    } catch (error: any) {
-      alert("Erro ao enviar o e-mail: " + (error?.text?.toString() || ""))
-      console.error("Erro ao enviar o e-mail:", error)
-    }
+    await new Promise(resolve => setTimeout(resolve, 2000))
+    setSubmitted(true)
     setIsSubmitting(false)
   }
 
   if (submitted) {
     return (
-      <Card className="p-8 m-8 text-center">
-        <CheckCircle2 className="mx-auto mb-4 h-16 w-16 text-green-600" />
-        <h2 className="mb-2 text-2xl font-bold text-gray-900">Solicitação Enviada com Sucesso!</h2>
-        <p className="mb-6 text-gray-600">
-          Sua solicitação foi enviada para a Defensoria Pública. Você receberá uma resposta no e-mail{" "}
-          <strong>{formData.applicantEmail}</strong> assim que o caso for analisado.
-        </p>
-        <div className="mb-6 rounded-lg bg-gray-900 p-4 font-mono text-xl font-bold text-white">
-          REQ-{Date.now()}
+      <div className="flex h-full flex-col bg-white">
+        <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-4">
+          <h1 className="text-xl font-semibold text-gray-900">Solicitação Enviada</h1>
         </div>
-        <div className="mb-6 flex items-center justify-center gap-3 text-sm text-gray-600">
-          <Clock className="h-5 w-5" />
-          <span>Status: Pendente de Análise</span>
+        <div className="flex-1 overflow-y-auto p-6">
+          <div className="mx-auto max-w-2xl">
+            <Card className="p-8 text-center">
+              <CheckCircle2 className="h-16 w-16 text-green-600 mx-auto mb-4" />
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Solicitação Enviada!</h2>
+              <div className="bg-gray-900 text-white p-4 rounded-lg font-mono text-xl font-bold mb-6">
+                REQ-{Date.now()}
+              </div>
+              <div className="flex items-center justify-center gap-3 text-sm text-gray-600 mb-6">
+                <Clock className="h-5 w-5" />
+                <span>Status: Pendente de Análise</span>
+              </div>
+              <Button className="w-full">Baixar Comprovante</Button>
+            </Card>
+          </div>
         </div>
-        <p className="mb-6 text-xs text-gray-500">
-          Guarde este número de protocolo para referência futura. Verifique sua caixa de spam.
-        </p>
-        <Button className="w-full" onClick={() => window.location.reload()}>
-          Fazer Nova Solicitação
-        </Button>
-      </Card>
+      </div>
     )
   }
 
@@ -174,13 +94,13 @@ E-mail: ${formData.applicantEmail}`
           {/* Banner Informativo */}
           <Card className="p-4 bg-blue-50 border-blue-200 mb-6">
             <div className="flex items-start gap-3">
-              <div className="shrink-0">
+              <div className="flex-shrink-0">
                 <FileText className="h-6 w-6 text-blue-600" />
               </div>
               <div>
                 <h3 className="font-semibold text-blue-900 mb-1">Solicitar Advogado do Governo</h3>
                 <p className="text-sm text-blue-800">
-                  Esta ferramenta permite solicitar um advogado público para auxiliar no processo de obtenção de benefícios sociais.
+                  Esta ferramenta permite solicitar um advogado público para auxiliar no processo de obtenção de benefícios sociais. 
                   Preencha o formulário abaixo com as informações necessárias e sua solicitação será enviada para a Defensoria Pública ou órgão competente.
                 </p>
               </div>
@@ -190,8 +110,9 @@ E-mail: ${formData.applicantEmail}`
             <div className="flex items-center justify-between">
               {[1, 2, 3, 4, 5, 6].map((step) => (
                 <div key={step} className="flex items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${step === currentStep ? "bg-gray-900 text-white" : step < currentStep ? "bg-green-600 text-white" : "bg-gray-200 text-gray-600"
-                    }`}>
+                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                    step === currentStep ? "bg-gray-900 text-white" : step < currentStep ? "bg-green-600 text-white" : "bg-gray-200 text-gray-600"
+                  }`}>
                     {step < currentStep ? "✓" : step}
                   </div>
                   {step < 6 && <div className={`w-12 h-1 ${step < currentStep ? "bg-green-600" : "bg-gray-200"}`} />}
@@ -208,8 +129,9 @@ E-mail: ${formData.applicantEmail}`
                   {BENEFIT_TYPES.map((benefit) => (
                     <Card
                       key={benefit.id}
-                      className={`p-4 cursor-pointer border-2 transition-all ${formData.benefitType === benefit.id ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"
-                        }`}
+                      className={`p-4 cursor-pointer border-2 transition-all ${
+                        formData.benefitType === benefit.id ? "border-gray-900 bg-gray-50" : "border-gray-200 hover:border-gray-300"
+                      }`}
                       onClick={() => setFormData(prev => ({ ...prev, benefitType: benefit.id }))}
                     >
                       <h3 className="font-semibold text-gray-900 mb-1">{benefit.name}</h3>
@@ -319,41 +241,12 @@ E-mail: ${formData.applicantEmail}`
                   Próximo <ChevronRight className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button onClick={() => setIsConfirming(true)} disabled={isSubmitting} className="gap-2 bg-green-600 hover:bg-green-700">
-                  <Send className="h-4 w-4" />
+                <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2 bg-green-600 hover:bg-green-700">
                   {isSubmitting ? "Enviando..." : "Enviar Solicitação"}
                 </Button>
               )}
             </div>
           </Card>
-
-          <Dialog open={isConfirming} onOpenChange={setIsConfirming}>
-            <DialogContent className="sm:max-w-[525px]">
-              <DialogHeader>
-                <DialogTitle>Confirmar Envio da Solicitação</DialogTitle>
-                <DialogDescription>
-                  Sua solicitação será enviada para a <strong>Defensoria Pública</strong> para análise.
-                  Revise as informações abaixo antes de confirmar.
-                </DialogDescription>
-              </DialogHeader>
-              <div className="space-y-4 py-4 text-sm">
-                <div className="space-y-1">
-                  <p><strong>Para:</strong> {RECIPIENT_EMAIL}</p>
-                  <p><strong>Assunto:</strong> Solicitação de Apoio Jurídico - {BENEFIT_TYPES.find(b => b.id === formData.benefitType)?.name}</p>
-                </div>
-                <div className="max-h-60 overflow-y-auto rounded-md border bg-gray-50 p-4 whitespace-pre-wrap">
-                  <h4 className="font-semibold mb-2 text-base">Visualização do E-mail</h4>
-                  <p>{emailBody}</p>
-                </div>
-              </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsConfirming(false)}>Cancelar</Button>
-                <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2 bg-green-600 hover:bg-green-700">
-                  {isSubmitting ? "Enviando..." : (<> <Send className="h-4 w-4" /> Confirmar e Enviar </>)}
-                </Button>
-              </DialogFooter>
-            </DialogContent>
-          </Dialog>
         </div>
       </div>
     </div>

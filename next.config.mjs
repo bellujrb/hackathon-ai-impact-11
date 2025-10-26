@@ -13,12 +13,12 @@ const nextConfig = {
   webpack: (config, { isServer }) => {
     // Para server-side, marcar pdfkit e fontkit como external
     if (isServer) {
-      config.externals.push('pdfkit', 'fontkit');
+      config.externals = config.externals || [];
+      config.externals.push({
+        'pdfkit': 'commonjs pdfkit',
+        'fontkit': 'commonjs fontkit',
+      });
     }
-
-    // Para client-side, fornecer um fallback vazio para fs, pois o pdfkit tenta usá-lo
-    config.resolve.fallback = { ...config.resolve.fallback, fs: false };
-
     return config;
   },
 }
