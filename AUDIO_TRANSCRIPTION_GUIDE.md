@@ -14,11 +14,12 @@ O Theo agora possui funcionalidade completa de **transcrição de áudio em temp
 - Visualização de ondas de áudio animadas
 
 ### 🔄 Transcrição Inteligente
-- Transcrição automática usando Google Speech-to-Text
+- Transcrição automática usando Google Speech-to-Text (primário)
+- Fallback automático para OpenAI Whisper (se Google falhar)
 - Suporte para português brasileiro (pt-BR)
 - Pontuação automática
 - Modelo otimizado (enhanced model)
-- Fallback graceful quando serviço indisponível
+- Sistema dual redundante para alta disponibilidade
 
 ### 🎨 Interface Visual
 - Botão de microfone animado
@@ -69,15 +70,21 @@ API Route para transcrição
 **Processo:**
 1. Recebe arquivo de áudio (WebM/Opus)
 2. Converte para Buffer
-3. Envia para Google Speech-to-Text
-4. Retorna transcrição em texto
+3. Tenta Google Speech-to-Text primeiro
+4. Se falhar, usa OpenAI Whisper como fallback
+5. Retorna transcrição em texto
 
-**Configurações:**
+**Configurações (Google Speech):**
 - Encoding: WEBM_OPUS
 - Sample Rate: 16000 Hz
 - Language: pt-BR
 - Pontuação automática
 - Modelo enhanced
+
+**Configurações (OpenAI Whisper):**
+- Model: whisper-1
+- Language: pt
+- Automatic transcription
 
 ---
 
@@ -88,10 +95,19 @@ API Route para transcrição
 Para usar a transcrição de áudio, adicione no `.env.local`:
 
 ```bash
-# Google Cloud Credentials (já configurado para Document AI)
+# Opção 1: Google Cloud Credentials (Recomendado - já configurado para Document AI)
 GOOGLE_CLOUD_CLIENT_EMAIL=seu_client_email@project.iam.gserviceaccount.com
 GOOGLE_CLOUD_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY-----\n"
+
+# Opção 2: OpenAI API (Fallback ou alternativa)
+OPENAI_API_KEY=sk-...
 ```
+
+**Sistema Dual:**
+- Se ambas estiverem configuradas, usa Google primeiro e OpenAI como fallback
+- Se apenas Google estiver configurada, usa apenas Google
+- Se apenas OpenAI estiver configurada, usa apenas OpenAI
+- Se nenhuma estiver configurada, retorna erro 503
 
 ### Habilitar Google Speech-to-Text API
 
@@ -102,6 +118,12 @@ GOOGLE_CLOUD_PRIVATE_KEY="-----BEGIN PRIVATE KEY-----\n...\n-----END PRIVATE KEY
 5. Clique em "Enable"
 
 **Nota:** As mesmas credenciais do Document AI são usadas!
+
+### Alternativa: Usar OpenAI Whisper
+
+1. Acesse [OpenAI Platform](https://platform.openai.com/api-keys)
+2. Crie uma API Key
+3. Adicione `OPENAI_API_KEY` ao `.env.local`
 
 ---
 
@@ -182,12 +204,17 @@ graph TD
     F --> G[Parar gravação]
     G --> H[Criar Blob de áudio]
     H --> I[Enviar para API /transcribe-audio]
-    I --> J[Google Speech-to-Text]
-    J --> K{Sucesso?}
-    K -->|Sim| L[Retornar transcrição]
-    K -->|Não| M[Erro amigável]
-    L --> N[Preencher input com texto]
-    N --> O[Focar no textarea]
+    I --> J{Google credentials?}
+    J -->|Sim| K[Google Speech-to-Text]
+    J -->|Não| L[OpenAI Whisper]
+    K --> M{Sucesso?}
+    M -->|Sim| N[Retornar transcrição]
+    M -->|Não| L
+    L --> O{Sucesso?}
+    O -->|Sim| N
+    O -->|Não| P[Erro amigável]
+    N --> Q[Preencher input com texto]
+    Q --> R[Focar no textarea]
 ```
 
 ---
@@ -366,21 +393,42 @@ Compartilhar seu microfone com hackathon-ai-impact-11.vercel.app?
 
 ---
 
-## 💰 Custos (Google Speech-to-Text)
+## 💰 Custos
 
-### Preços (Dezembro 2024)
+### Google Speech-to-Text
 
+**Preços:**
 - **Primeiros 60 minutos/mês**: GRÁTIS 🎉
 - **Após 60 min**: $0.006 por 15 segundos
 - **Modelo enhanced**: $0.009 por 15 segundos
 
-### Estimativa para Hackathon
-
+**Estimativa para Hackathon:**
 - **100 usuárias x 5 perguntas/dia** = 500 perguntas
 - **~10 segundos por pergunta** = 5.000 segundos
 - **= 83 minutos** → $1.50/dia (~$45/mês)
 
-**Recomendação:** Tier gratuito suficiente para MVP/Demo! 🎉
+### OpenAI Whisper
+
+**Preços:**
+- **$0.006 por minuto** (sem tier gratuito)
+
+**Estimativa para Hackathon:**
+- **100 usuárias x 5 perguntas/dia** = 500 perguntas
+- **~10 segundos por pergunta** = 5.000 segundos
+- **= 83 minutos** → $0.50/dia (~$15/mês)
+
+### Comparação
+
+| Serviço | Tier Gratuito | Custo/mês (hackathon) | Qualidade |
+|---------|---------------|----------------------|-----------|
+| Google Speech | 60 min | $45 | Excelente (pt-BR) |
+| OpenAI Whisper | Não | $15 | Excelente (multilíngue) |
+| **Ambos (fallback)** | 60 min | **$0-30** | Máxima disponibilidade |
+
+**Recomendação:** Usar sistema dual (Google + Whisper fallback) para:
+- ✅ Aproveitar tier gratuito do Google
+- ✅ Garantir alta disponibilidade
+- ✅ Custos controlados (~$30/mês no pior caso)
 
 ---
 
