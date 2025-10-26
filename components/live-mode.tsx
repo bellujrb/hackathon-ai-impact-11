@@ -199,11 +199,15 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
             {/* Error Message */}
             {error && (
               <motion.div
-                className="mb-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm max-w-md"
+                className="mb-4 mx-4 px-4 py-3 bg-red-50 border border-red-200 rounded-xl text-red-700 text-sm sm:text-base max-w-md text-center"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -10 }}
               >
-                {error}
+                <p className="font-medium">{error}</p>
+                <p className="text-xs sm:text-sm text-red-600 mt-1">
+                  💡 Dica: Segure o botão, fale claramente por 1-2 segundos, e solte.
+                </p>
               </motion.div>
             )}
 

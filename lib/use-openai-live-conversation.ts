@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useRef, useCallback } from "react"
+import { useState, useRef, useCallback, useEffect } from "react"
 import { useAudioRecorder } from "./use-audio-recorder"
 
 export type ConversationState = "idle" | "listening" | "processing" | "speaking"
@@ -46,6 +46,16 @@ export function useOpenAILiveConversation({
     cancelRecording,
     resetState,
   } = useAudioRecorder()
+
+  // Limpar erro automaticamente após 5 segundos
+  useEffect(() => {
+    if (error) {
+      const timer = setTimeout(() => {
+        setError(null)
+      }, 5000)
+      return () => clearTimeout(timer)
+    }
+  }, [error])
 
   const startListening = useCallback(async () => {
     try {
@@ -105,11 +115,27 @@ export function useOpenAILiveConversation({
 
       const transcribeData = await transcribeResponse.json()
 
-      if (!transcribeData.success || !transcribeData.data.transcription) {
-        throw new Error(transcribeData.error || "Erro ao transcrever áudio")
+      if (!transcribeData.success || !transcribeData.data?.transcription) {
+        // Mensagens de erro mais amigáveis
+        if (transcribeData.error?.includes("muito curto")) {
+          throw new Error("⏱️ Áudio muito curto! Fale por mais tempo.")
+        } else if (transcribeData.error?.includes("Audio file is too short")) {
+          throw new Error("⏱️ Áudio muito curto! Fale por mais tempo (mínimo 0.1s).")
+        } else if (transcribeData.error?.includes("temporariamente indisponível")) {
+          throw new Error("🔄 Serviço de transcrição temporariamente indisponível. Tente novamente!")
+        } else if (transcribeData.error?.includes("Invalid file format")) {
+          throw new Error("🎤 Erro no formato do áudio. Tente gravar novamente!")
+        } else {
+          throw new Error(`❌ ${transcribeData.error || "Não consegui entender o áudio. Tente falar mais claramente!"}`)
+        }
       }
 
-      const userMessage = transcribeData.data.transcription
+      const userMessage = transcribeData.data.transcription.trim()
+      
+      // Validar se a transcrição não está vazia
+      if (!userMessage || userMessage.length < 2) {
+        throw new Error("🎤 Não consegui ouvir nada. Fale mais alto ou mais perto do microfone!")
+      }
 
       // Adicionar mensagem do usuário
       setMessages((prev) => [
