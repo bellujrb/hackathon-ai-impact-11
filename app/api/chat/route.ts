@@ -3,6 +3,7 @@ import { AmparaOrchestrator } from "@/lib/ampara-orchestrator"
 import { GuideAgent } from "@/lib/agents/guide-agent"
 import { RightsSpecialistAgent } from "@/lib/agents/rights-specialist"
 import { ChatGoogleGenerativeAI } from "@langchain/google-genai"
+import PDFDocument from 'pdfkit'
 
 export const maxDuration = 60
 
@@ -23,6 +24,118 @@ export async function POST(req: NextRequest) {
 
     // Verificar se é uma mensagem de laudo ou pergunta sobre benefício
     const messageLower = message.toLowerCase()
+
+    // Use LLM to classify intent (report vs checklist vs help) to avoid heuristic conflicts
+    let classifiedIntent: { intent: string; benefitType: string | null; benefitName: string | null } | null = null
+    try {
+      const classifier = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash-lite', temperature: 0.0, apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY })
+      const classifierPrompt = `Você é um classificador de intenção para o assistente AMPARA.
+Receba a seguinte entrada:
+Usuária: ${message}
+Última mensagem do assistente (se houver): ${lastAssistant || ''}
+
+Classifique a intenção em UMA das opções: report, checklist, help, greeting, other.
+Também tente identificar se a mensagem menciona um benefício específico entre: BPC/LOAS, Passe Livre, Isenção de IPVA, Professor de Apoio (AEE), Medicamentos SUS, Terapias SUS.
+
+Retorne APENAS um JSON com as chaves: intent, benefitType, benefitName.
+Exemplo:
+{"intent":"report","benefitType":"passe-livre","benefitName":"Passe Livre"}
+
+Regras importantes:
+- "report": quando o usuário quer que seja gerado um relatório ou laudo
+- "checklist": quando o usuário quer orientações passo a passo ou um checklist
+- "help": pedido de ajuda em uma etapa específica
+- "greeting": mensagens de saudação ou apresentação
+- "other": qualquer outra coisa
+
+Se não houver benefício detectável, use null para benefitType e benefitName.
+Responda APENAS com o JSON, sem texto adicional.`
+
+      const classifierResp = await classifier.invoke([{ role: 'user', content: classifierPrompt }])
+      const classifierContent = classifierResp.content as string
+      const jsonMatch = classifierContent.match(/\{[\s\S]*\}/)
+      if (jsonMatch) {
+        const parsed = JSON.parse(jsonMatch[0])
+        classifiedIntent = {
+          intent: parsed.intent || 'other',
+          benefitType: parsed.benefitType || null,
+          benefitName: parsed.benefitName || null,
+        }
+      }
+    } catch (err) {
+      console.error('Intent classifier error:', err)
+      classifiedIntent = null
+    }
+
+    // If classifier returned a clear intent, handle accordingly and return early to avoid heuristic conflicts
+    if (classifiedIntent) {
+      const intent = classifiedIntent.intent
+      // REPORT flow
+      if (intent === 'report') {
+        const benefitTypeDetected = classifiedIntent.benefitType
+        const rightsAgent = new RightsSpecialistAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+        const officialWriter = new (await import('@/lib/agents/official-writer')).OfficialWriterAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+
+        // If classifier already detected the benefit, generate report immediately
+        if (benefitTypeDetected && benefitTypeDetected !== 'outros') {
+          const benefits = await rightsAgent.identifyApplicableBenefits({ cid: null, age: null, supportLevel: null, schoolType: 'nao-informado', observations: '' })
+          let mappedBenefitId: string = benefitTypeDetected as string
+          if (benefitTypeDetected === 'apoio-educacional') mappedBenefitId = 'educacao-inclusiva'
+          const benefit = benefits.find(b => b.id === mappedBenefitId) || benefits[0]
+          try {
+            const doc = await officialWriter.generateOfficialDocument(benefit, { cid: null, age: null, supportLevel: null, schoolType: 'nao-informado', observations: '' } as any, 'letter')
+            // gerar PDF e retornar em base64 dentro do JSON para download imediato pelo cliente
+            try {
+              const pdfUint8 = await generatePdfUint8(doc.title, doc.content)
+              const pdfBase64 = Buffer.from(pdfUint8).toString('base64')
+              return NextResponse.json({ type: 'report-pdf', response: doc.content, title: doc.title, filename: `${(doc.title || 'relatorio').replace(/[^a-z0-9\-]/gi, '_')}.pdf`, pdfBase64 })
+            } catch (pdfErr) {
+              console.error('PDF generation error (classifier):', pdfErr)
+              return NextResponse.json({ type: 'report-generated', response: doc.content, title: doc.title })
+            }
+          } catch (err) {
+            console.error('Error generating report (classifier):', err)
+            return NextResponse.json({ type: 'report-generated', response: 'Desculpe, não foi possível gerar o relatório no momento.' })
+          }
+        }
+
+        // Otherwise ask for the report subject
+        return NextResponse.json({ type: 'ask-report-target', response: 'Entendi. Sobre qual assunto/benefício você quer que eu gere o relatório? (ex: conseguir um professor de apoio)' })
+      }
+
+      // CHECKLIST flow
+      if (intent === 'checklist') {
+        const { benefitType, benefitName } = detectBenefitType(message)
+        const rightsAgent = new RightsSpecialistAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+        const guideAgent = new GuideAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+        const benefits = await rightsAgent.identifyApplicableBenefits({ cid: null, age: null, supportLevel: null, schoolType: 'nao-informado', observations: '' })
+        let mappedBenefitId: string = benefitType
+        if (benefitType === 'apoio-educacional') mappedBenefitId = 'educacao-inclusiva'
+        const benefit = benefits.find(b => b.id === mappedBenefitId) || benefits[0]
+        const checklist = await guideAgent.generateDetailedChecklist(benefit)
+        return NextResponse.json({ type: 'benefit-question', response: `Olá! Vou te ajudar com o ${benefitName}. Criei um checklist completo e detalhado com ${checklist.length} etapas para você acompanhar todo o processo passo a passo. Você consegue! 💙`, checklist: { items: checklist }, benefitType, benefitName })
+      }
+
+      // HELP flow
+      if (intent === 'help') {
+        try {
+          const model = new ChatGoogleGenerativeAI({ model: 'gemini-2.0-flash-lite', temperature: 0.0, apiKey: process.env.NEXT_PUBLIC_GOOGLE_API_KEY })
+          const prompt = `Você é o AMPARA, um assistente especializado em ajudar mães de crianças autistas no Brasil a acessar benefícios. A usuária precisa de ajuda com uma etapa específica: "${message}" Forneça orientações práticas, específicas e empáticas (máximo 200 palavras) sobre: 1. O que fazer nesta etapa específica 2. Documentos ou requisitos necessários 3. Dicas e onde buscar mais informações 4. Seja encorajadora e detalhada Responda APENAS o texto da mensagem, sem formatação adicional.`
+          const response = await model.invoke([{ role: 'user', content: prompt }])
+          return NextResponse.json({ type: 'help-response', response: response.content as string })
+        } catch (error) {
+          console.error('Error generating help response (classifier):', error)
+          return NextResponse.json({ type: 'help-response', response: 'Desculpe, ocorreu um erro ao processar sua solicitação. Tente novamente.' })
+        }
+      }
+
+      // GREETING flow
+      if (intent === 'greeting') {
+        return NextResponse.json({ type: 'greeting', response: 'Olá! 😊 Sou o AMPARA, assistente especializado em ajudar mães de crianças autistas a acessar benefícios e direitos no Brasil. Posso te ajudar com BPC/LOAS, Passe Livre, Isenção de IPVA, Professor de Apoio e muito mais! Como posso te ajudar hoje? 💙' })
+      }
+
+      // fallthrough to default handling
+    }
 
     // Detect explicit request to GENERATE a report (multi-step flow)
     // Use a compact substring match to handle accents and multiple phrasings.
@@ -47,33 +160,36 @@ export async function POST(req: NextRequest) {
 
     // If client explicitly requested force-report, generate when benefit detected
     if (previousInteractionType === 'force-report' && directDetect.benefitType !== 'outros') {
+    try {
+      const rightsAgent = new RightsSpecialistAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+      const officialWriter = new (await import('@/lib/agents/official-writer')).OfficialWriterAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+
+      const benefits = await rightsAgent.identifyApplicableBenefits({
+        cid: null,
+        age: null,
+        supportLevel: null,
+        schoolType: 'nao-informado',
+        observations: '',
+      })
+
+      let mappedBenefitId: string = directDetect.benefitType
+      if (directDetect.benefitType === 'apoio-educacional') mappedBenefitId = 'educacao-inclusiva'
+      const benefit = benefits.find(b => b.id === mappedBenefitId) || benefits[0]
+
+      const doc = await officialWriter.generateOfficialDocument(benefit, { cid: null, age: null, supportLevel: null, schoolType: 'nao-informado', observations: '' } as any, 'letter')
+
       try {
-        const rightsAgent = new RightsSpecialistAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
-        const officialWriter = new (await import('@/lib/agents/official-writer')).OfficialWriterAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
-
-        const benefits = await rightsAgent.identifyApplicableBenefits({
-          cid: null,
-          age: null,
-          supportLevel: null,
-          schoolType: 'nao-informado',
-          observations: '',
-        })
-
-        let mappedBenefitId: string = directDetect.benefitType
-        if (directDetect.benefitType === 'apoio-educacional') mappedBenefitId = 'educacao-inclusiva'
-        const benefit = benefits.find(b => b.id === mappedBenefitId) || benefits[0]
-
-        const doc = await officialWriter.generateOfficialDocument(benefit, { cid: null, age: null, supportLevel: null, schoolType: 'nao-informado', observations: '' } as any, 'letter')
-
-        return NextResponse.json({
-          type: 'report-generated',
-          response: doc.content,
-          title: doc.title,
-        })
-      } catch (err) {
-        console.error('Error generating report (force):', err)
-        return NextResponse.json({ type: 'report-generated', response: 'Desculpe, não foi possível gerar o relatório no momento.' })
+  const pdfUint8 = await generatePdfUint8(doc.title, doc.content)
+  const pdfBase64 = Buffer.from(pdfUint8).toString('base64')
+  return NextResponse.json({ type: 'report-pdf', response: doc.content, title: doc.title, filename: `${(doc.title || 'relatorio').replace(/[^a-z0-9\-]/gi, '_')}.pdf`, pdfBase64 })
+      } catch (pdfErr) {
+        console.error('PDF generation error (force):', pdfErr)
+        return NextResponse.json({ type: 'report-generated', response: doc.content, title: doc.title })
       }
+    } catch (err) {
+      console.error('Error generating report (force):', err)
+      return NextResponse.json({ type: 'report-generated', response: 'Desculpe, não foi possível gerar o relatório no momento.' })
+    }
     }
 
   if (((messageLower.includes('relat') || messageLower.includes('relatorio') || messageLower.includes('laudo')) && directDetect.benefitType !== 'outros') || isShortReportAnswer) {
@@ -371,5 +487,60 @@ function detectBenefitType(message: string): {
   }
 
   return { benefitType: "outros", benefitName: "Benefício" }
+}
+
+// Helper: generate a PDF from title/content and return as Uint8Array
+async function generatePdfUint8(title: string | undefined, content: string): Promise<Uint8Array> {
+  const doc = new PDFDocument({ size: 'A4', margin: 50 })
+
+  const chunks: Uint8Array[] = []
+  doc.on('data', (chunk: Uint8Array) => chunks.push(chunk))
+
+  const endPromise = new Promise<Buffer>((resolve, reject) => {
+    doc.on('end', () => resolve(Buffer.concat(chunks.map((c) => Buffer.from(c)))))
+    doc.on('error', (err: any) => reject(err))
+  })
+
+  // Header
+  doc.fontSize(14).font('Helvetica-Bold')
+  if (title) {
+    doc.text(title, { align: 'center' })
+    doc.moveDown()
+  }
+
+  // Divider
+  try {
+    doc.moveTo(doc.x, doc.y).lineTo(doc.page.width - (doc as any).options.margin, doc.y).strokeOpacity(0.1).stroke()
+  } catch (_) {
+    // stroke may fail in some runtimes; ignore to avoid crashing
+  }
+
+  doc.moveDown()
+
+  // Body
+  doc.fontSize(11).font('Helvetica')
+
+  if (typeof content === 'string') {
+    const paragraphs = content.split('\n\n')
+    paragraphs.forEach((p: string) => {
+      doc.text(p.trim(), {
+        align: 'left',
+        lineGap: 4,
+      })
+      doc.moveDown(0.5)
+    })
+  }
+
+  // Footer note
+  doc.moveDown()
+  doc.fontSize(9).fillColor('gray')
+  doc.text('Este documento foi gerado pela plataforma AMPARA. Deve ser revisado e assinado por um profissional habilitado para ter validade legal.', {
+    align: 'left',
+  })
+
+  doc.end()
+
+  const pdfBuffer = await endPromise
+  return Uint8Array.from(pdfBuffer)
 }
 

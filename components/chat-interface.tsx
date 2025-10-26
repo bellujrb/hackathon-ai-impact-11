@@ -19,6 +19,7 @@ interface Message {
   content: string
   meta?: {
     pdfContent?: string
+    pdfBase64?: string
     title?: string
     filename?: string
   }
@@ -153,16 +154,18 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
 
       await simulateStreaming(data.response)
 
-      // If server returned a generated report, attach metadata so UI can offer PDF download
-      if (data.type === 'report-generated') {
+      // If server returned a generated report (text) or a PDF, attach metadata so UI can offer PDF download
+      if (data.type === 'report-generated' || data.type === 'report-pdf') {
         setMessages((prev) =>
           prev.map((msg) =>
             msg.id === assistantMessageId
               ? {
                   ...msg,
-                  content: data.response,
+                  content: data.response || data.response || '',
                   meta: {
-                    pdfContent: data.response,
+                    // PDF may come as base64 (report-pdf) or as text-only (report-generated)
+                    pdfBase64: data.pdfBase64,
+                    pdfContent: data.response, // fallback to text for legacy flow
                     title: data.title || `Relatório`,
                     filename: `${(data.title || 'relatorio').replace(/[^a-z0-9\-\_]/gi, '_')}.pdf`,
                   },
@@ -216,6 +219,27 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
       URL.revokeObjectURL(url)
     } catch (err) {
       console.error('Erro ao baixar PDF', err)
+      alert('Erro ao gerar PDF')
+    }
+  }
+
+  const downloadPdfFromBase64 = async (base64: string, filename?: string) => {
+    try {
+      const byteCharacters = atob(base64)
+      const byteNumbers = new Array(byteCharacters.length)
+      for (let i = 0; i < byteCharacters.length; i++) {
+        byteNumbers[i] = byteCharacters.charCodeAt(i)
+      }
+      const byteArray = new Uint8Array(byteNumbers)
+      const blob = new Blob([byteArray], { type: 'application/pdf' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename || 'relatorio.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Erro ao baixar PDF (base64)', err)
       alert('Erro ao gerar PDF')
     }
   }
@@ -286,10 +310,16 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                           <ReactMarkdown>{message.content}</ReactMarkdown>
 
                           {/* If assistant provided PDF metadata, show download button */}
-                          {message.meta?.pdfContent && (
+                          {(message.meta?.pdfContent || message.meta?.pdfBase64) && (
                             <div className="mt-3">
                               <button
-                                onClick={() => downloadPdfFromText(message.meta!.pdfContent!, message.meta!.title, message.meta!.filename)}
+                                onClick={() => {
+                                  if (message.meta?.pdfBase64) {
+                                    downloadPdfFromBase64(message.meta.pdfBase64, message.meta.filename)
+                                  } else if (message.meta?.pdfContent) {
+                                    downloadPdfFromText(message.meta.pdfContent, message.meta.title, message.meta.filename)
+                                  }
+                                }}
                                 className="inline-flex items-center rounded bg-gray-900 text-white px-3 py-1 text-sm"
                               >
                                 Baixar PDF
