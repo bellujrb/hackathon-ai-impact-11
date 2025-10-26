@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Upload, FileText, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
+import ReportGenerator from "@/components/report-generator"
 
 export function DocumentVerifier() {
   const [file, setFile] = useState<File | null>(null)
@@ -233,6 +234,9 @@ export function DocumentVerifier() {
               </div>
             </Card>
           )}
+
+          {/* Gerador de Relatórios */}
+          <ReportGenerator />
         </div>
       </div>
     </div>
