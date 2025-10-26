@@ -6,9 +6,19 @@ import { Card } from "@/components/ui/card"
 import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { FileText, Upload, ChevronRight, ChevronLeft, CheckCircle2, Clock } from "lucide-react"
+import { FileText, Upload, ChevronRight, ChevronLeft, CheckCircle2, Clock, Send } from "lucide-react"
+import emailjs from "@emailjs/browser"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 
 export function DesignationRequest() {
+  const RECIPIENT_EMAIL = "fmarcus549@gmail.com"
   const [currentStep, setCurrentStep] = useState(1)
   const [formData, setFormData] = useState({
     benefitType: "",
@@ -28,33 +38,103 @@ export function DesignationRequest() {
     documents: [] as File[],
     observations: ""
   })
-
+  
   const BENEFIT_TYPES = [
     { id: "bpc", name: "BPC/LOAS", description: "Benefício de Prestação Continuada da Assistência Social" },
     { id: "passe-livre", name: "Passe Livre", description: "Transporte gratuito para tratamento e terapias" },
     { id: "isencao-ipva", name: "Isenção de IPVA", description: "Isenção total do Imposto sobre Propriedade de Veículos" },
     { id: "professor-apoio", name: "Professor de Apoio", description: "Atendimento Educacional Especializado" }
   ]
-
+  
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files) {
       const files = Array.from(e.target.files)
       setFormData(prev => ({ ...prev, documents: [...prev.documents, ...files] }))
     }
   }
-
+  
   const removeDocument = (index: number) => {
     setFormData(prev => ({ ...prev, documents: prev.documents.filter((_, i) => i !== index) }))
   }
-
+  
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [submitted, setSubmitted] = useState(false)
+  const [isConfirming, setIsConfirming] = useState(false)
+
+  const benefitName = BENEFIT_TYPES.find(b => b.id === formData.benefitType)?.name ?? "Não especificado"
+  const emailBody = `Prezados(as) Defensores(as) Públicos(as),
+
+Eu, ${formData.applicantName}, portador(a) do CPF nº ${formData.applicantCPF} e RG nº ${formData.applicantRG}, residente no endereço ${formData.applicantAddress}, venho por meio deste e-mail solicitar respeitosamente assistência jurídica gratuita.
+
+A presente solicitação visa garantir o direito ao benefício de "${benefitName}" para meu/minha filho(a), ${formData.beneficiaryName}, de ${formData.beneficiaryAge} anos, diagnosticado(a) com Transtorno do Espectro Autista (TEA).
+
+Nossa renda familiar mensal é de R$ ${formData.monthlyIncome}, composta por ${formData.familyComposition}, o que nos enquadra nos critérios para o atendimento pela Defensoria Pública. Enfrentamos dificuldades para acessar o benefício, que é fundamental para o desenvolvimento e qualidade de vida do(a) meu/minha filho(a).
+
+Diante do exposto, solicito o auxílio de um(a) Defensor(a) Público(a) para me representar e orientar no processo administrativo ou judicial para a obtenção do referido benefício, assegurando que os direitos do(a) beneficiário(a) sejam plenamente atendidos conforme a legislação vigente.
+
+Seguem anexos os documentos necessários para a análise do caso. Coloco-me à inteira disposição para fornecer quaisquer informações adicionais.
+
+Agradeço a atenção.
+
+Atenciosamente,
+
+${formData.applicantName}
+Telefone: ${formData.applicantPhone}
+E-mail: ${formData.applicantEmail}`
 
   const handleSubmit = async () => {
     setIsSubmitting(true)
-    await new Promise(resolve => setTimeout(resolve, 2000))
-    setSubmitted(true)
+
+    function toBase64(file: File): Promise<string> {
+      return new Promise((resolve, reject) => {
+        const reader = new FileReader()
+        reader.readAsDataURL(file)
+        reader.onload = () => resolve(reader.result as string)
+        reader.onerror = error => reject(error)
+      })
+    }
+    
+    const emailData: any = {
+      email: RECIPIENT_EMAIL,
+      benefit_type: benefitName,
+      applicant_name: formData.applicantName,
+      applicant_email: formData.applicantEmail,
+      email_body: emailBody,
+    }
+
+    for (let i = 0; i < formData.documents.length; i++) {
+      emailData[`document_${i + 1}`] = await toBase64(formData.documents[i])
+      emailData[`document_name_${i + 1}`] = formData.documents[i].name
+    }
+
+    try {
+      const serviceId = process.env.NEXT_PUBLIC_EMAILJS_SERVICE_ID
+      const templateId = process.env.NEXT_PUBLIC_EMAILJS_TEMPLATE_ID
+      const publicKey = process.env.NEXT_PUBLIC_EMAILJS_PUBLIC_KEY
+
+      if (!serviceId || !templateId || !publicKey) {
+        const missing = [
+          !serviceId && "NEXT_PUBLIC_EMAILJS_SERVICE_ID",
+          !templateId && "NEXT_PUBLIC_EMAILJS_TEMPLATE_ID",
+          !publicKey && "NEXT_PUBLIC_EMAILJS_PUBLIC_KEY",
+        ].filter(Boolean).join(", ")
+
+        throw new Error(`Variáveis de ambiente ausentes: ${missing}. Verifique seu .env e reinicie a aplicação.`)
+      }
+      
+      await emailjs.send(
+        serviceId,
+        templateId,
+        emailData,
+        publicKey
+      )
+      setSubmitted(true)
+    } catch (error: any) {
+      alert("Erro ao enviar o e-mail: " + (error?.text?.toString() || ""))
+      console.error("Erro ao enviar o e-mail:", error)
+    }
     setIsSubmitting(false)
+    setIsConfirming(false)
   }
 
   if (submitted) {
@@ -67,7 +147,11 @@ export function DesignationRequest() {
           <div className="mx-auto max-w-2xl">
             <Card className="p-8 text-center dark:bg-gray-800">
               <CheckCircle2 className="h-16 w-16 text-green-600 dark:text-green-400 mx-auto mb-4" />
-              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Solicitação Enviada!</h2>
+              <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Solicitação Enviada com Sucesso!</h2>
+              <p className="mb-6 text-gray-600 dark:text-gray-300">
+                Sua solicitação foi enviada para a Defensoria Pública. Você receberá uma resposta no e-mail{" "}
+                <strong className="text-gray-900 dark:text-white">{formData.applicantEmail}</strong> assim que o caso for analisado.
+              </p>
               <div className="bg-gray-900 dark:bg-gray-700 text-white p-4 rounded-lg font-mono text-xl font-bold mb-6">
                 REQ-{Date.now()}
               </div>
@@ -75,7 +159,12 @@ export function DesignationRequest() {
                 <Clock className="h-5 w-5" />
                 <span>Status: Pendente de Análise</span>
               </div>
-              <Button className="w-full">Baixar Comprovante</Button>
+              <p className="mb-6 text-xs text-gray-500 dark:text-gray-400">
+                Guarde este número de protocolo para referência futura. Verifique sua caixa de spam.
+              </p>
+              <Button className="w-full bg-theo-purple dark:bg-purple-600 hover:bg-theo-purple-dark dark:hover:bg-purple-700" onClick={() => window.location.reload()}>
+                Fazer Nova Solicitação
+              </Button>
             </Card>
           </div>
         </div>
@@ -106,6 +195,7 @@ export function DesignationRequest() {
               </div>
             </div>
           </Card>
+          
           <div className="mb-8">
             <div className="flex items-center justify-between">
               {[1, 2, 3, 4, 5, 6].map((step) => (
@@ -146,15 +236,15 @@ export function DesignationRequest() {
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 2: Dados do Solicitante</h2>
                 <div className="space-y-3">
-                  <div><Label>Nome Completo *</Label><Input value={formData.applicantName} onChange={(e) => setFormData(prev => ({ ...prev, applicantName: e.target.value }))} /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Nome Completo *</Label><Input value={formData.applicantName} onChange={(e) => setFormData(prev => ({ ...prev, applicantName: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label>CPF *</Label><Input value={formData.applicantCPF} onChange={(e) => setFormData(prev => ({ ...prev, applicantCPF: e.target.value }))} /></div>
-                    <div><Label>RG *</Label><Input value={formData.applicantRG} onChange={(e) => setFormData(prev => ({ ...prev, applicantRG: e.target.value }))} /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">CPF *</Label><Input value={formData.applicantCPF} onChange={(e) => setFormData(prev => ({ ...prev, applicantCPF: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">RG *</Label><Input value={formData.applicantRG} onChange={(e) => setFormData(prev => ({ ...prev, applicantRG: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   </div>
-                  <div><Label>Endereço *</Label><Textarea value={formData.applicantAddress} onChange={(e) => setFormData(prev => ({ ...prev, applicantAddress: e.target.value }))} rows={2} /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Endereço *</Label><Textarea value={formData.applicantAddress} onChange={(e) => setFormData(prev => ({ ...prev, applicantAddress: e.target.value }))} rows={2} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label>Telefone *</Label><Input value={formData.applicantPhone} onChange={(e) => setFormData(prev => ({ ...prev, applicantPhone: e.target.value }))} /></div>
-                    <div><Label>E-mail *</Label><Input value={formData.applicantEmail} onChange={(e) => setFormData(prev => ({ ...prev, applicantEmail: e.target.value }))} /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">Telefone *</Label><Input value={formData.applicantPhone} onChange={(e) => setFormData(prev => ({ ...prev, applicantPhone: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">E-mail *</Label><Input value={formData.applicantEmail} onChange={(e) => setFormData(prev => ({ ...prev, applicantEmail: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   </div>
                 </div>
               </div>
@@ -164,12 +254,12 @@ export function DesignationRequest() {
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 3: Dados do Beneficiário</h2>
                 <div className="space-y-3">
-                  <div><Label>Nome da Criança/Adulto com Autismo *</Label><Input value={formData.beneficiaryName} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryName: e.target.value }))} /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Nome da Criança/Adulto com Autismo *</Label><Input value={formData.beneficiaryName} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryName: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   <div className="grid grid-cols-2 gap-3">
-                    <div><Label>CPF *</Label><Input value={formData.beneficiaryCPF} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryCPF: e.target.value }))} /></div>
-                    <div><Label>RG *</Label><Input value={formData.beneficiaryRG} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryRG: e.target.value }))} /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">CPF *</Label><Input value={formData.beneficiaryCPF} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryCPF: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
+                    <div><Label className="text-gray-900 dark:text-gray-100">RG *</Label><Input value={formData.beneficiaryRG} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryRG: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   </div>
-                  <div><Label>Idade *</Label><Input type="number" value={formData.beneficiaryAge} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryAge: e.target.value }))} /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Idade *</Label><Input type="number" value={formData.beneficiaryAge} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryAge: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                 </div>
               </div>
             )}
@@ -178,9 +268,9 @@ export function DesignationRequest() {
               <div className="space-y-4">
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 4: Composição Familiar / Renda</h2>
                 <div className="space-y-3">
-                  <div><Label>Renda Mensal da Família (R$) *</Label><Input type="number" value={formData.monthlyIncome} onChange={(e) => setFormData(prev => ({ ...prev, monthlyIncome: e.target.value }))} /></div>
-                  <div><Label>Número de Dependentes *</Label><Input type="number" value={formData.dependents} onChange={(e) => setFormData(prev => ({ ...prev, dependents: e.target.value }))} /></div>
-                  <div><Label>Composição Familiar *</Label><Textarea value={formData.familyComposition} onChange={(e) => setFormData(prev => ({ ...prev, familyComposition: e.target.value }))} rows={3} /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Renda Mensal da Família (R$) *</Label><Input type="number" value={formData.monthlyIncome} onChange={(e) => setFormData(prev => ({ ...prev, monthlyIncome: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Número de Dependentes *</Label><Input type="number" value={formData.dependents} onChange={(e) => setFormData(prev => ({ ...prev, dependents: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
+                  <div><Label className="text-gray-900 dark:text-gray-100">Composição Familiar *</Label><Textarea value={formData.familyComposition} onChange={(e) => setFormData(prev => ({ ...prev, familyComposition: e.target.value }))} rows={3} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                 </div>
               </div>
             )}
@@ -191,7 +281,7 @@ export function DesignationRequest() {
                 <div className="space-y-3">
                   <div className="border-2 border-dashed border-gray-300 dark:border-gray-700 rounded-lg p-6 text-center">
                     <Upload className="h-12 w-12 text-gray-400 dark:text-gray-500 mx-auto mb-3" />
-                    <Label htmlFor="file-upload" className="cursor-pointer">
+                    <Label htmlFor="file-upload" className="cursor-pointer text-gray-900 dark:text-gray-100">
                       <span className="text-blue-600 dark:text-blue-400 font-medium">Clique para fazer upload</span> ou arraste arquivos
                     </Label>
                     <Input id="file-upload" type="file" multiple accept=".pdf,.jpg,.jpeg,.png" onChange={handleFileChange} className="hidden" />
@@ -241,12 +331,40 @@ export function DesignationRequest() {
                   Próximo <ChevronRight className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2 bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">
+                <Button onClick={() => setIsConfirming(true)} disabled={isSubmitting} className="gap-2 bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">
                   {isSubmitting ? "Enviando..." : "Enviar Solicitação"}
                 </Button>
               )}
             </div>
           </Card>
+
+          <Dialog open={isConfirming} onOpenChange={setIsConfirming}>
+            <DialogContent className="sm:max-w-[525px] dark:bg-gray-800 dark:border-gray-700">
+              <DialogHeader>
+                <DialogTitle className="text-gray-900 dark:text-white">Confirmar Envio da Solicitação</DialogTitle>
+                <DialogDescription className="text-gray-600 dark:text-gray-400">
+                  Sua solicitação será enviada para a <strong className="text-gray-900 dark:text-white">Defensoria Pública</strong> para análise.
+                  Revise as informações abaixo antes de confirmar.
+                </DialogDescription>
+              </DialogHeader>
+              <div className="space-y-4 py-4 text-sm">
+                <div className="space-y-1">
+                  <p className="text-gray-900 dark:text-gray-100"><strong>Para:</strong> {RECIPIENT_EMAIL}</p>
+                  <p className="text-gray-900 dark:text-gray-100"><strong>Assunto:</strong> Solicitação de Apoio Jurídico - {BENEFIT_TYPES.find(b => b.id === formData.benefitType)?.name}</p>
+                </div>
+                <div className="max-h-60 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 whitespace-pre-wrap text-gray-700 dark:text-gray-300">
+                  <h4 className="font-semibold mb-2 text-base">Visualização do E-mail</h4>
+                  <p>{emailBody}</p>
+                </div>
+              </div>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setIsConfirming(false)} className="dark:border-gray-600">Cancelar</Button>
+                <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2 bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">
+                  {isSubmitting ? "Enviando..." : (<> <Send className="h-4 w-4" /> Confirmar e Enviar </>)}
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
         </div>
       </div>
     </div>
