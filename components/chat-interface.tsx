@@ -4,9 +4,12 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { Send, X } from "lucide-react"
+import { Send, X, Scale, FileText, School, DollarSign, Mic } from "lucide-react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import ReactMarkdown from 'react-markdown'
+import { TheoAvatar } from "@/components/theo-avatar"
+import { SuggestionCard } from "@/components/suggestion-card"
+import { motion } from "framer-motion"
 
 interface MarkdownComponentProps {
   children: React.ReactNode
@@ -256,51 +259,91 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
       </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6">
+      <div className="flex-1 overflow-y-auto p-6 bg-theo-lavanda-light">
         {messages.length === 0 ? (
-          <div className="flex h-full flex-col items-center justify-center px-4">
-            <h1 className="mb-4 text-center text-4xl font-bold text-gray-900 text-balance">
-              Como posso te ajudar a acessar benefícios?
-            </h1>
-            <p className="mb-12 max-w-2xl text-center text-gray-600 leading-relaxed">
-              Pergunte sobre qualquer benefício e vou criar um checklist detalhado com todas as etapas que você precisa
-              seguir.
-            </p>
-            <div className="grid gap-4 sm:grid-cols-3 max-w-3xl w-full">
-              <Card
-                className="cursor-pointer border-gray-200 p-5 transition-all hover:border-gray-900 hover:shadow-md"
+          <div className="flex h-full flex-col items-center justify-center px-4 py-12">
+            {/* Avatar do Theo */}
+            <motion.div
+              initial={{ scale: 0, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              transition={{ type: "spring", stiffness: 200, damping: 15 }}
+              className="mb-6"
+            >
+              <TheoAvatar state="happy" size="xl" />
+            </motion.div>
+
+            {/* Boas-vindas */}
+            <motion.h1
+              className="mb-3 text-center text-4xl font-bold text-gray-900 text-balance"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.2 }}
+            >
+              Olá! Sou o Theo.
+            </motion.h1>
+            <motion.p
+              className="mb-12 max-w-2xl text-center text-lg text-gray-600 leading-relaxed"
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.3 }}
+            >
+              Como posso te ajudar a acessar os direitos do seu filho hoje?
+            </motion.p>
+
+            {/* Suggestion Cards */}
+            <div className="grid gap-4 sm:grid-cols-2 max-w-3xl w-full">
+              <SuggestionCard
+                icon={Scale}
+                text="Quais são meus direitos?"
+                onClick={() => handleQuickAction("outros", "Direitos", "Quais são os direitos do meu filho autista?")}
+                delay={0.4}
+                iconColor="text-theo-purple"
+              />
+              <SuggestionCard
+                icon={FileText}
+                text="Como gerar a Ficha Theo?"
+                onClick={() => handleQuickAction("outros", "Ficha Theo", "Como funciona a Ficha Theo? Pode me explicar?")}
+                delay={0.5}
+                iconColor="text-theo-coral"
+              />
+              <SuggestionCard
+                icon={School}
+                text="O que é educação inclusiva (AEE)?"
+                onClick={() => handleQuickAction("apoio-educacional", "AEE", "Quero saber sobre Atendimento Educacional Especializado (AEE)")}
+                delay={0.6}
+                iconColor="text-theo-mint"
+              />
+              <SuggestionCard
+                icon={DollarSign}
+                text="Quero solicitar o BPC"
                 onClick={() => handleQuickAction("bpc", "BPC/LOAS", "Quero solicitar o BPC/LOAS para meu filho")}
-              >
-                <h3 className="text-base font-semibold text-gray-900 mb-1">BPC/LOAS</h3>
-                <p className="text-xs text-gray-600">Benefício de Prestação Continuada</p>
-              </Card>
-              <Card
-                className="cursor-pointer border-gray-200 p-5 transition-all hover:border-gray-900 hover:shadow-md"
-                onClick={() =>
-                  handleQuickAction("passe-livre", "Passe Livre", "Como solicitar o passe livre intermunicipal?")
-                }
-              >
-                <h3 className="text-base font-semibold text-gray-900 mb-1">Passe Livre</h3>
-                <p className="text-xs text-gray-600">Transporte gratuito</p>
-              </Card>
-              <Card
-                className="cursor-pointer border-gray-200 p-5 transition-all hover:border-gray-900 hover:shadow-md"
-                onClick={() =>
-                  handleQuickAction("isencao-ipva", "Isenção de IPVA", "Quero isenção de IPVA para pessoa autista")
-                }
-              >
-                <h3 className="text-base font-semibold text-gray-900 mb-1">Isenção IPVA</h3>
-                <p className="text-xs text-gray-600">Isenção de impostos</p>
-              </Card>
+                delay={0.7}
+                iconColor="text-theo-yellow"
+              />
             </div>
           </div>
         ) : (
-          <div className="mx-auto max-w-3xl space-y-4">
+          <div className="mx-auto max-w-3xl space-y-6">
             {messages.map((message) => (
-              <div key={message.id} className={`flex ${message.role === "user" ? "justify-end" : "justify-start"}`}>
+              <motion.div
+                key={message.id}
+                className={`flex gap-3 ${message.role === "user" ? "justify-end" : "justify-start"}`}
+                initial={{ opacity: 0, y: 10 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.3 }}
+              >
+                {/* Avatar do Theo para mensagens do assistente */}
+                {message.role === "assistant" && (
+                  <div className="flex-shrink-0">
+                    <TheoAvatar state={message.content ? "idle" : "talking"} size="sm" />
+                  </div>
+                )}
+
                 <Card
                   className={`max-w-[85%] p-4 ${
-                    message.role === "user" ? "bg-gray-900 text-white border-0" : "border-gray-200 bg-white"
+                    message.role === "user"
+                      ? "bg-theo-purple text-white border-0 rounded-2xl shadow-theo"
+                      : "border-theo-lavanda bg-white rounded-2xl shadow-theo"
                   }`}
                 >
                   {message.role === "assistant" ? (
@@ -320,7 +363,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                                     downloadPdfFromText(message.meta.pdfContent, message.meta.title, message.meta.filename)
                                   }
                                 }}
-                                className="inline-flex items-center rounded bg-gray-900 text-white px-3 py-1 text-sm"
+                                className="inline-flex items-center rounded-xl bg-theo-purple hover:bg-theo-purple-dark text-white px-4 py-2 text-sm font-medium transition-all"
                               >
                                 Baixar PDF
                               </button>
@@ -329,9 +372,24 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                         </>
                       ) : (
                         <div className="flex items-center gap-2 py-2">
-                          <div className="h-2 w-2 animate-pulse rounded-full bg-gray-400"></div>
-                          <div className="h-2 w-2 animate-pulse rounded-full bg-gray-400" style={{ animationDelay: '0.2s' }}></div>
-                          <div className="h-2 w-2 animate-pulse rounded-full bg-gray-400" style={{ animationDelay: '0.4s' }}></div>
+                          <span className="text-gray-500 text-sm">Theo está pensando</span>
+                          <div className="flex gap-1">
+                            <motion.div
+                              className="h-2 w-2 rounded-full bg-theo-purple"
+                              animate={{ opacity: [0.3, 1, 0.3] }}
+                              transition={{ repeat: Infinity, duration: 1, delay: 0 }}
+                            />
+                            <motion.div
+                              className="h-2 w-2 rounded-full bg-theo-purple"
+                              animate={{ opacity: [0.3, 1, 0.3] }}
+                              transition={{ repeat: Infinity, duration: 1, delay: 0.2 }}
+                            />
+                            <motion.div
+                              className="h-2 w-2 rounded-full bg-theo-purple"
+                              animate={{ opacity: [0.3, 1, 0.3] }}
+                              transition={{ repeat: Infinity, duration: 1, delay: 0.4 }}
+                            />
+                          </div>
                         </div>
                       )}
                     </div>
@@ -341,41 +399,58 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                     </p>
                   )}
                 </Card>
-              </div>
+              </motion.div>
             ))}
           </div>
         )}
       </div>
 
-      <div className="border-t border-gray-200 p-6">
+      <div className="border-t border-theo-lavanda bg-white p-6">
         <div className="mx-auto max-w-3xl">
           {askingAboutBenefit && (
-            <div className="mb-3 flex items-center justify-between rounded-lg bg-gray-100 px-4 py-2 text-sm">
+            <motion.div
+              className="mb-3 flex items-center justify-between rounded-xl bg-theo-lavanda px-4 py-3 text-sm"
+              initial={{ opacity: 0, y: -10 }}
+              animate={{ opacity: 1, y: 0 }}
+            >
               <span className="text-gray-700">
-                Perguntando sobre: <span className="font-semibold">{askingAboutBenefit.name}</span>
+                Perguntando sobre: <span className="font-semibold text-theo-purple">{askingAboutBenefit.name}</span>
               </span>
-              <Button variant="ghost" size="sm" onClick={onClearAskingAbout} className="h-6 w-6 p-0 hover:bg-gray-200">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={onClearAskingAbout}
+                className="h-6 w-6 p-0 hover:bg-theo-lavanda-light"
+              >
                 <X className="h-4 w-4" />
               </Button>
-            </div>
+            </motion.div>
           )}
-          <div className="flex gap-3">
-            <Textarea
-              value={input}
-              onChange={(e) => setInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault()
-                  handleSend()
-                }
-              }}
-              placeholder="Ex: Quero solicitar o BPC/LOAS para meu filho"
-              className="min-h-[60px] resize-none border-gray-300 focus:border-gray-900 focus:ring-gray-900"
-            />
+          <div className="flex gap-3 relative">
+            <div className="relative flex-1">
+              <Textarea
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter" && !e.shiftKey) {
+                    e.preventDefault()
+                    handleSend()
+                  }
+                }}
+                placeholder="Digite sua pergunta ou pressione o microfone..."
+                className="min-h-[60px] resize-none border-2 border-theo-lavanda rounded-2xl focus:border-theo-purple focus:ring-2 focus:ring-theo-purple/20 pr-12 transition-all"
+              />
+              <button
+                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-theo-purple hover:bg-theo-lavanda rounded-lg transition-colors"
+                aria-label="Usar microfone"
+              >
+                <Mic className="h-5 w-5" />
+              </button>
+            </div>
             <Button
               onClick={handleSend}
-              disabled={!input.trim()}
-              className="h-[60px] bg-gray-900 px-6 hover:bg-gray-800"
+              disabled={!input.trim() || isLoading}
+              className="h-[60px] px-6 bg-theo-purple hover:bg-theo-purple-dark text-white rounded-2xl shadow-theo transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="h-5 w-5" />
             </Button>
