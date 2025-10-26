@@ -10,6 +10,7 @@ interface UseAudioRecorderReturn {
   startRecording: () => Promise<void>
   stopRecording: () => Promise<Blob | null>
   cancelRecording: () => void
+  resetState: () => void
   error: string | null
 }
 
@@ -124,12 +125,19 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     setError(null)
   }, [])
 
+  const resetState = useCallback(() => {
+    setRecordingState("idle")
+    setRecordingTime(0)
+    setError(null)
+  }, [])
+
   return {
     recordingState,
     recordingTime,
     startRecording,
     stopRecording,
     cancelRecording,
+    resetState,
     error,
   }
 }

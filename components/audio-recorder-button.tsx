@@ -18,6 +18,7 @@ export function AudioRecorderButton({ onTranscription, className = "" }: AudioRe
     startRecording,
     stopRecording,
     cancelRecording,
+    resetState,
     error,
   } = useAudioRecorder()
 
@@ -58,6 +59,7 @@ export function AudioRecorderButton({ onTranscription, className = "" }: AudioRe
           toast.error("Erro ao processar áudio. Tente novamente.")
         } finally {
           setIsTranscribing(false)
+          resetState()
         }
       }
     }
