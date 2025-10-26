@@ -2,6 +2,21 @@
   "name": "my-v0-project",
   "version": "0.1.0",
   "private": true,
+  "description": "Uma aplicação Next.js moderna para ajudar famílias de crianças autistas a acessar benefícios do governo, com um sistema inteligente de checklists e assistente virtual.",
+  "homepage": "https://github.com/bellujrb/hackathon-ai-impact-11#readme",
+  "bugs": {
+    "url": "https://github.com/bellujrb/hackathon-ai-impact-11/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bellujrb/hackathon-ai-impact-11.git"
+  },
+  "license": "ISC",
+  "author": "",
+  "main": "index.js",
+  "directories": {
+    "lib": "lib"
+  },
   "scripts": {
     "build": "next build",
     "dev": "next dev",
@@ -60,7 +75,7 @@
     "react-dom": "19.2.0",
     "react-hook-form": "^7.60.0",
     "react-markdown": "^10.1.0",
-  "pdfkit": "^0.13.0",
+    "pdfkit": "^0.13.0",
     "react-resizable-panels": "^2.1.7",
     "recharts": "2.15.4",
     "sonner": "^1.7.4",
