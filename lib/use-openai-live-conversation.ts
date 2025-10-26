@@ -11,11 +11,11 @@ interface Message {
   timestamp: Date
 }
 
-interface UseGeminiLiveConversationProps {
+interface UseOpenAILiveConversationProps {
   captureVideoFrame: () => string | null
 }
 
-interface UseGeminiLiveConversationReturn {
+interface UseOpenAILiveConversationReturn {
   conversationState: ConversationState
   messages: Message[]
   recordingTime: number
@@ -26,9 +26,9 @@ interface UseGeminiLiveConversationReturn {
   error: string | null
 }
 
-export function useGeminiLiveConversation({
+export function useOpenAILiveConversation({
   captureVideoFrame,
-}: UseGeminiLiveConversationProps): UseGeminiLiveConversationReturn {
+}: UseOpenAILiveConversationProps): UseOpenAILiveConversationReturn {
   const [conversationState, setConversationState] = useState<ConversationState>("idle")
   const [messages, setMessages] = useState<Message[]>([])
   const [error, setError] = useState<string | null>(null)
@@ -117,11 +117,11 @@ export function useGeminiLiveConversation({
         { role: "user", content: userMessage, timestamp: new Date() },
       ])
 
-      // 2. Enviar para Gemini Multimodal (áudio transcrito + frames de vídeo)
+      // 2. Enviar para OpenAI Multimodal (áudio transcrito + frames de vídeo)
       let assistantMessage = ""
       
-      // Tentar usar Gemini Multimodal primeiro (com visão)
-      const geminiResponse = await fetch("/api/gemini-multimodal", {
+      // Usar OpenAI Vision (GPT-4o) para análise multimodal
+      const openaiResponse = await fetch("/api/openai-multimodal", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -130,16 +130,16 @@ export function useGeminiLiveConversation({
         }),
       })
 
-      if (geminiResponse.ok) {
-        const geminiData = await geminiResponse.json()
-        if (geminiData.success && geminiData.response) {
-          assistantMessage = geminiData.response
+      if (openaiResponse.ok) {
+        const openaiData = await openaiResponse.json()
+        if (openaiData.success && openaiData.response) {
+          assistantMessage = openaiData.response
         }
       }
       
-      // Fallback: usar API de chat normal se Gemini Multimodal falhar
+      // Fallback: usar API de chat normal se OpenAI Multimodal falhar
       if (!assistantMessage) {
-        console.warn("Gemini Multimodal indisponível, usando chat normal como fallback")
+        console.warn("OpenAI Multimodal indisponível, usando chat normal como fallback")
         
         const chatResponse = await fetch("/api/chat", {
           method: "POST",

@@ -4,7 +4,7 @@ import { motion, AnimatePresence } from "framer-motion"
 import { X, Mic, MicOff, Loader2 } from "lucide-react"
 import { TheoLiveAvatar } from "./theo-live-avatar"
 import { VideoPreview } from "./video-preview"
-import { useGeminiLiveConversation } from "@/lib/use-gemini-live-conversation"
+import { useOpenAILiveConversation } from "@/lib/use-openai-live-conversation"
 import { useWebcamStream } from "@/lib/use-webcam-stream"
 import { useEffect } from "react"
 
@@ -32,7 +32,7 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
     stopListening,
     cancelListening,
     error,
-  } = useGeminiLiveConversation({
+  } = useOpenAILiveConversation({
     captureVideoFrame: captureFrame,
   })
 
