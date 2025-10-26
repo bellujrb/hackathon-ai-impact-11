@@ -6,9 +6,10 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  // Desabilitar Turbopack explicitamente - usar webpack por incompatibilidade com pdfkit
-  turbopack: undefined,
-  // Configuração para pdfkit funcionar corretamente com webpack
+  // Silenciar aviso do Turbopack sobre config webpack
+  // Em dev usa Turbopack, em build usa webpack (mais compatível com pdfkit)
+  turbopack: {},
+  // Configuração para pdfkit funcionar corretamente com webpack (apenas build)
   webpack: (config, { isServer }) => {
     // Para server-side, marcar pdfkit e fontkit como external
     if (isServer) {
