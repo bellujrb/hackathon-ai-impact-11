@@ -40,6 +40,38 @@ export async function POST(req: NextRequest) {
       messageLower.includes("cid") ||
       messageLower.includes("tea")
 
+    // If the message clearly asks for a report AND names a benefit, generate immediately.
+    const directDetect = detectBenefitType(message)
+    if ((messageLower.includes('relat') || messageLower.includes('relatorio') || messageLower.includes('laudo')) && directDetect.benefitType !== 'outros') {
+      try {
+        const rightsAgent = new RightsSpecialistAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+        const officialWriter = new (await import('@/lib/agents/official-writer')).OfficialWriterAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+
+        const benefits = await rightsAgent.identifyApplicableBenefits({
+          cid: null,
+          age: null,
+          supportLevel: null,
+          schoolType: 'nao-informado',
+          observations: '',
+        })
+
+        let mappedBenefitId: string = directDetect.benefitType
+        if (directDetect.benefitType === 'apoio-educacional') mappedBenefitId = 'educacao-inclusiva'
+        const benefit = benefits.find(b => b.id === mappedBenefitId) || benefits[0]
+
+        const doc = await officialWriter.generateOfficialDocument(benefit, { cid: null, age: null, supportLevel: null, schoolType: 'nao-informado', observations: '' } as any, 'letter')
+
+        return NextResponse.json({
+          type: 'report-generated',
+          response: doc.content,
+          title: doc.title,
+        })
+      } catch (err) {
+        console.error('Error generating report (direct):', err)
+        return NextResponse.json({ type: 'report-generated', response: 'Desculpe, não foi possível gerar o relatório no momento.' })
+      }
+    }
+
   // If the previous assistant message asked for a subject/benefit for the report,
   // treat the current message as the report target and generate the report.
   // Prefer an explicit flag from the client (previousInteractionType) when available.
