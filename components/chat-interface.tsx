@@ -258,13 +258,13 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
   return (
     <>
       <Toaster position="top-center" />
-      <div className="flex h-full flex-col bg-white">
-        <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-4">
+      <div className="flex h-full flex-col bg-white dark:bg-gray-950">
+        <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
           <SidebarTrigger />
         </div>
 
       {/* Messages Area */}
-      <div className="flex-1 overflow-y-auto p-6 bg-theo-lavanda-light">
+      <div className="flex-1 overflow-y-auto p-6 bg-theo-lavanda-light dark:bg-gray-900">
         {messages.length === 0 ? (
           <div className="flex h-full flex-col items-center justify-center px-4 py-12">
             {/* Avatar do Theo */}
@@ -279,7 +279,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
 
             {/* Boas-vindas */}
             <motion.h1
-              className="mb-3 text-center text-4xl font-bold text-gray-900 text-balance"
+              className="mb-3 text-center text-4xl font-bold text-gray-900 dark:text-white text-balance"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
@@ -287,7 +287,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
               Olá! Sou o Theo.
             </motion.h1>
             <motion.p
-              className="mb-12 max-w-2xl text-center text-lg text-gray-600 leading-relaxed"
+              className="mb-12 max-w-2xl text-center text-lg text-gray-600 dark:text-gray-300 leading-relaxed"
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.3 }}
@@ -347,12 +347,12 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                 <Card
                   className={`max-w-[85%] p-4 ${
                     message.role === "user"
-                      ? "bg-theo-purple text-white border-0 rounded-2xl shadow-theo"
-                      : "border-theo-lavanda bg-white rounded-2xl shadow-theo"
+                      ? "bg-theo-purple dark:bg-purple-700 text-white border-0 rounded-2xl shadow-theo"
+                      : "border-theo-lavanda dark:border-gray-700 bg-white dark:bg-gray-800 rounded-2xl shadow-theo"
                   }`}
                 >
                   {message.role === "assistant" ? (
-                    <div className="text-sm leading-relaxed text-gray-900 prose prose-sm max-w-none">
+                    <div className="text-sm leading-relaxed text-gray-900 dark:text-gray-100 prose prose-sm max-w-none dark:prose-invert">
                       {message.content ? (
                         <>
                           <ReactMarkdown>{message.content}</ReactMarkdown>
@@ -371,7 +371,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                                     downloadPdfFromText(message.meta.pdfContent, message.meta.title, message.meta.filename)
                                   }
                                 }}
-                                className="inline-flex items-center rounded-xl bg-theo-purple hover:bg-theo-purple-dark text-white px-4 py-2 text-sm font-medium transition-all"
+                                className="inline-flex items-center rounded-xl bg-theo-purple dark:bg-purple-600 hover:bg-theo-purple-dark dark:hover:bg-purple-700 text-white px-4 py-2 text-sm font-medium transition-all"
                               >
                                 Baixar PDF
                               </button>
@@ -380,7 +380,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                         </>
                       ) : (
                         <div className="flex items-center gap-2 py-2">
-                          <span className="text-gray-500 text-sm">Theo está pensando</span>
+                          <span className="text-gray-500 dark:text-gray-400 text-sm">Theo está pensando</span>
                           <div className="flex gap-1">
                             <motion.div
                               className="h-2 w-2 rounded-full bg-theo-purple"
@@ -413,7 +413,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
         )}
       </div>
 
-      <div className="border-t border-theo-lavanda bg-white p-6">
+      <div className="border-t border-theo-lavanda dark:border-gray-800 bg-white dark:bg-gray-950 p-6">
         <div className="mx-auto max-w-3xl">
           {askingAboutBenefit && (
             <motion.div
@@ -421,14 +421,14 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
             >
-              <span className="text-gray-700">
-                Perguntando sobre: <span className="font-semibold text-theo-purple">{askingAboutBenefit.name}</span>
+              <span className="text-gray-700 dark:text-gray-300">
+                Perguntando sobre: <span className="font-semibold text-theo-purple dark:text-purple-400">{askingAboutBenefit.name}</span>
               </span>
               <Button
                 variant="ghost"
                 size="sm"
                 onClick={onClearAskingAbout}
-                className="h-6 w-6 p-0 hover:bg-theo-lavanda-light"
+                className="h-6 w-6 p-0 hover:bg-theo-lavanda-light dark:hover:bg-gray-800"
               >
                 <X className="h-4 w-4" />
               </Button>
@@ -446,7 +446,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                   }
                 }}
                 placeholder="Digite sua pergunta ou pressione o microfone..."
-                className="min-h-[60px] resize-none border-2 border-theo-lavanda rounded-2xl focus:border-theo-purple focus:ring-2 focus:ring-theo-purple/20 pr-12 transition-all"
+                className="min-h-[60px] resize-none border-2 border-theo-lavanda dark:border-gray-700 rounded-2xl focus:border-theo-purple dark:focus:border-purple-600 focus:ring-2 focus:ring-theo-purple/20 dark:bg-gray-900 dark:text-white pr-12 transition-all"
               />
               <div className="absolute right-3 top-1/2 -translate-y-1/2">
                 <AudioRecorderButton
@@ -464,7 +464,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
             <Button
               onClick={handleSend}
               disabled={!input.trim() || isLoading}
-              className="h-[60px] px-6 bg-theo-purple hover:bg-theo-purple-dark text-white rounded-2xl shadow-theo transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+              className="h-[60px] px-6 bg-theo-purple dark:bg-purple-700 hover:bg-theo-purple-dark dark:hover:bg-purple-800 text-white rounded-2xl shadow-theo transition-all disabled:opacity-50 disabled:cursor-not-allowed"
             >
               <Send className="h-5 w-5" />
             </Button>

@@ -71,7 +71,7 @@ export default function Home() {
         )}
       </AnimatePresence>
 
-      <div className="flex h-screen w-full bg-white">
+      <div className="flex h-screen w-full bg-white dark:bg-gray-950">
         <Sidebar
           benefitRequests={benefitRequests}
           selectedBenefit={selectedBenefit}

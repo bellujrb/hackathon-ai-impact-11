@@ -14,7 +14,7 @@ interface SuggestionCardProps {
 export function SuggestionCard({ icon: Icon, text, onClick, delay = 0, iconColor = "text-theo-purple" }: SuggestionCardProps) {
   return (
     <motion.button
-      className="w-full group relative bg-white border-2 border-theo-lavanda rounded-2xl p-4 text-left transition-all hover:border-theo-purple hover:shadow-theo"
+      className="w-full group relative bg-white dark:bg-gray-800 border-2 border-theo-lavanda dark:border-gray-700 rounded-2xl p-4 text-left transition-all hover:border-theo-purple dark:hover:border-purple-600 hover:shadow-theo"
       onClick={onClick}
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
@@ -26,7 +26,7 @@ export function SuggestionCard({ icon: Icon, text, onClick, delay = 0, iconColor
         <div className={`flex-shrink-0 ${iconColor}`}>
           <Icon className="w-6 h-6" />
         </div>
-        <span className="text-gray-800 font-medium text-sm leading-relaxed group-hover:text-gray-900">
+        <span className="text-gray-800 dark:text-gray-200 font-medium text-sm leading-relaxed group-hover:text-gray-900 dark:group-hover:text-white">
           {text}
         </span>
       </div>
