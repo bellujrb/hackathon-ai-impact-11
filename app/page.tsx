@@ -7,6 +7,9 @@ import { ChecklistSidebar } from "@/components/checklist-sidebar"
 import { DocumentVerifier } from "@/components/document-verifier"
 import { DesignationRequest } from "@/components/designation-request"
 import { SidebarProvider } from "@/components/ui/sidebar"
+import { Onboarding } from "@/components/onboarding"
+import { useFirstVisit } from "@/lib/use-first-visit"
+import { AnimatePresence } from "framer-motion"
 
 export interface ChecklistItem {
   id: string
@@ -30,6 +33,7 @@ export default function Home() {
   const [selectedBenefit, setSelectedBenefit] = useState<BenefitRequest | null>(null)
   const [chatInputValue, setChatInputValue] = useState("")
   const [selectedTab, setSelectedTab] = useState<"inicio" | "verificador" | "designacoes">("inicio")
+  const { isFirstVisit, isLoading, markVisitComplete } = useFirstVisit()
 
   const handleCreateBenefitRequest = (type: BenefitRequest["type"], name: string, checklist?: ChecklistItem[]) => {
     const newRequest: BenefitRequest = {
@@ -55,6 +59,16 @@ export default function Home() {
 
   return (
     <SidebarProvider>
+      {/* Onboarding - exibido apenas na primeira visita */}
+      <AnimatePresence>
+        {!isLoading && isFirstVisit && (
+          <Onboarding
+            onComplete={markVisitComplete}
+            onSkip={markVisitComplete}
+          />
+        )}
+      </AnimatePresence>
+
       <div className="flex h-screen w-full bg-white">
         <Sidebar
           benefitRequests={benefitRequests}

@@ -1,6 +1,6 @@
 "use client"
 
-import { Home, FileCheck, Scale } from "lucide-react"
+import { Home, FileCheck, Scale, HeadphonesIcon } from "lucide-react"
 import {
   Sidebar as SidebarUI,
   SidebarContent,
@@ -8,7 +8,9 @@ import {
   SidebarMenu,
   SidebarMenuItem,
   SidebarMenuButton,
+  SidebarFooter,
 } from "@/components/ui/sidebar"
+import { TheoAvatar } from "@/components/theo-avatar"
 import type { BenefitRequest } from "@/app/page"
 
 interface SidebarProps {
@@ -21,10 +23,18 @@ interface SidebarProps {
 
 export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, selectedTab, onSelectTab }: SidebarProps) {
   return (
-    <SidebarUI className="border-r border-gray-200 bg-white">
-      <SidebarHeader className="border-b border-gray-200 p-6">
-        <h1 className="text-xl font-semibold text-gray-900">AMPARA</h1>
-        <p className="mt-1 text-xs text-gray-500">Assistente para mães atípicas</p>
+    <SidebarUI className="border-r border-theo-lavanda bg-theo-lavanda-light">
+      <SidebarHeader className="border-b border-theo-lavanda p-6">
+        <div className="flex items-center gap-3">
+          <TheoAvatar state="idle" size="md" />
+          <div>
+            <h1 className="text-xl font-bold text-gray-900">Theo</h1>
+            <p className="text-xs text-gray-600 flex items-center gap-1">
+              <HeadphonesIcon className="h-3 w-3" />
+              Seu companheiro digital
+            </p>
+          </div>
+        </div>
       </SidebarHeader>
 
       <SidebarContent className="p-4">
@@ -36,7 +46,7 @@ export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, sel
                 onSelectBenefit(null)
               }}
               isActive={selectedTab === "inicio"}
-              className="w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-gray-100 data-[active=true]:bg-gray-900 data-[active=true]:text-white"
+              className="w-full justify-start gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-theo-lavanda data-[active=true]:bg-theo-purple data-[active=true]:text-white data-[active=true]:shadow-theo"
             >
               <Home className="h-5 w-5" />
               <span>Início</span>
@@ -50,7 +60,7 @@ export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, sel
                 onSelectBenefit(null)
               }}
               isActive={selectedTab === "verificador"}
-              className="w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-gray-100 data-[active=true]:bg-gray-900 data-[active=true]:text-white"
+              className="w-full justify-start gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-theo-lavanda data-[active=true]:bg-theo-purple data-[active=true]:text-white data-[active=true]:shadow-theo"
             >
               <FileCheck className="h-5 w-5" />
               <span>Verificador de Documentos</span>
@@ -64,7 +74,7 @@ export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, sel
                 onSelectBenefit(null)
               }}
               isActive={selectedTab === "designacoes"}
-              className="w-full justify-start gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors hover:bg-gray-100 data-[active=true]:bg-gray-900 data-[active=true]:text-white"
+              className="w-full justify-start gap-3 rounded-xl px-4 py-3 text-sm font-medium transition-all hover:bg-theo-lavanda data-[active=true]:bg-theo-purple data-[active=true]:text-white data-[active=true]:shadow-theo"
             >
               <Scale className="h-5 w-5" />
               <span>Designações Oficiais</span>
@@ -72,6 +82,14 @@ export function Sidebar({ benefitRequests, selectedBenefit, onSelectBenefit, sel
           </SidebarMenuItem>
         </SidebarMenu>
       </SidebarContent>
+
+      <SidebarFooter className="p-4 border-t border-theo-lavanda">
+        <div className="text-center">
+          <p className="text-xs text-gray-500">
+            Feito com 💙 para mães de crianças atípicas
+          </p>
+        </div>
+      </SidebarFooter>
     </SidebarUI>
   )
 }

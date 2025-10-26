@@ -285,9 +285,12 @@ export function ChecklistSidebar({
 
   if (benefitRequests.length === 0) {
     return (
-      <aside className="w-96 border-l border-gray-200 bg-gray-50 p-6">
+      <aside className="w-96 border-l border-theo-lavanda bg-theo-lavanda-light p-6">
         <h2 className="text-lg font-bold text-gray-900 mb-4">Meus Checklists</h2>
         <div className="text-center py-12">
+          <div className="mb-4">
+            <CheckCircle2 className="h-12 w-12 text-theo-purple mx-auto opacity-50" />
+          </div>
           <p className="text-sm text-gray-500">Nenhum checklist ainda.</p>
           <p className="text-sm text-gray-500 mt-2">Pergunte sobre um benefício no chat para começar.</p>
         </div>
@@ -296,8 +299,8 @@ export function ChecklistSidebar({
   }
 
   return (
-    <aside className="w-96 border-l border-gray-200 bg-gray-50 flex flex-col h-full">
-      <div className="p-6 border-b border-gray-200 bg-white">
+    <aside className="w-96 border-l border-theo-lavanda bg-theo-lavanda-light flex flex-col h-full">
+      <div className="p-6 border-b border-theo-lavanda bg-white">
         <h2 className="text-lg font-bold text-gray-900">Meus Checklists</h2>
         <p className="text-sm text-gray-600 mt-1">Acompanhe suas solicitações</p>
       </div>
@@ -310,19 +313,19 @@ export function ChecklistSidebar({
           const expandedItemId = expandedItems[benefit.id]
 
           return (
-            <Card key={benefit.id} className="overflow-hidden border-gray-200 bg-white">
+            <Card key={benefit.id} className="overflow-hidden border-theo-lavanda bg-white rounded-2xl shadow-theo">
               <div className="p-4">
                 <div className="flex items-start justify-between mb-3">
                   <div className="flex-1 min-w-0">
                     <h3 className="font-semibold text-gray-900 text-sm mb-1">{benefit.name}</h3>
                     <div className="flex items-center gap-2">
-                      <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
+                      <div className="flex-1 h-2 bg-theo-lavanda rounded-full overflow-hidden">
                         <div
-                          className="h-full bg-gray-900 transition-all duration-300"
+                          className="h-full bg-gradient-to-r from-theo-purple to-theo-coral transition-all duration-300"
                           style={{ width: `${progress}%` }}
                         />
                       </div>
-                      <span className="text-xs font-semibold text-gray-700">{progress}%</span>
+                      <span className="text-xs font-semibold text-theo-purple">{progress}%</span>
                     </div>
                   </div>
                   <div className="flex gap-1">

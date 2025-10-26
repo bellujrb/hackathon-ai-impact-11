@@ -4,45 +4,90 @@
 @custom-variant dark (&:is(.dark *));
 
 :root {
-  --background: oklch(1 0 0);
-  --foreground: oklch(0.145 0 0);
-  --card: oklch(1 0 0);
-  --card-foreground: oklch(0.145 0 0);
-  --popover: oklch(1 0 0);
-  --popover-foreground: oklch(0.145 0 0);
-  --primary: oklch(0.205 0 0);
-  --primary-foreground: oklch(0.985 0 0);
-  --secondary: oklch(0.97 0 0);
-  --secondary-foreground: oklch(0.205 0 0);
-  --muted: oklch(0.97 0 0);
-  --muted-foreground: oklch(0.556 0 0);
-  --accent: oklch(0.97 0 0);
-  --accent-foreground: oklch(0.205 0 0);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.922 0 0);
-  --input: oklch(0.922 0 0);
-  --ring: oklch(0.708 0 0);
-  --chart-1: oklch(0.646 0.222 41.116);
-  --chart-2: oklch(0.6 0.118 184.704);
-  --chart-3: oklch(0.398 0.07 227.392);
-  --chart-4: oklch(0.828 0.189 84.429);
-  --chart-5: oklch(0.769 0.188 70.08);
-  --radius: 0.625rem;
-  --sidebar: oklch(0.985 0 0);
-  --sidebar-foreground: oklch(0.145 0 0);
-  --sidebar-primary: oklch(0.205 0 0);
-  --sidebar-primary-foreground: oklch(0.985 0 0);
-  --sidebar-accent: oklch(0.97 0 0);
-  --sidebar-accent-foreground: oklch(0.205 0 0);
-  --sidebar-border: oklch(0.922 0 0);
-  --sidebar-ring: oklch(0.708 0 0);
+  /* Theo Color System - Paleta Híbrida Profissional + Lúdica */
+  --theo-purple: #8B7FD9;
+  --theo-purple-dark: #6B5FC9;
+  --theo-purple-light: #A99EE9;
+  --theo-lavanda: #E8E5F5;
+  --theo-lavanda-light: #F8F7FC;
+  --theo-coral: #FF9B85;
+  --theo-coral-dark: #FF7A5F;
+  --theo-yellow: #FFD88A;
+  --theo-yellow-dark: #FFCA5A;
+  --theo-mint: #7FD9B9;
+  --theo-mint-dark: #5FC9A9;
+  
+  /* Base Colors */
+  --background: #FFFFFF;
+  --foreground: #1F2937;
+  --card: #FFFFFF;
+  --card-foreground: #1F2937;
+  --popover: #FFFFFF;
+  --popover-foreground: #1F2937;
+  
+  /* Primary - Roxo Suave do Theo */
+  --primary: #8B7FD9;
+  --primary-foreground: #FFFFFF;
+  --primary-hover: #6B5FC9;
+  
+  /* Secondary - Lavanda */
+  --secondary: #E8E5F5;
+  --secondary-foreground: #1F2937;
+  --secondary-hover: #D5D0EB;
+  
+  /* Accent - Coral */
+  --accent: #FF9B85;
+  --accent-foreground: #FFFFFF;
+  --accent-hover: #FF7A5F;
+  
+  /* Warning - Amarelo */
+  --warning: #FFD88A;
+  --warning-foreground: #1F2937;
+  
+  /* Success - Verde Menta */
+  --success: #7FD9B9;
+  --success-foreground: #FFFFFF;
+  
+  /* Muted */
+  --muted: #F8F7FC;
+  --muted-foreground: #6B7280;
+  
+  /* Destructive */
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  
+  /* Borders */
+  --border: #E8E5F5;
+  --input: #E8E5F5;
+  --ring: #8B7FD9;
+  
+  /* Charts */
+  --chart-1: #8B7FD9;
+  --chart-2: #FF9B85;
+  --chart-3: #FFD88A;
+  --chart-4: #7FD9B9;
+  --chart-5: #A99EE9;
+  
+  /* Radius - Mais arredondado */
+  --radius: 1rem;
+  
+  /* Sidebar */
+  --sidebar: #F8F7FC;
+  --sidebar-foreground: #1F2937;
+  --sidebar-primary: #8B7FD9;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #E8E5F5;
+  --sidebar-accent-foreground: #1F2937;
+  --sidebar-border: #E8E5F5;
+  --sidebar-ring: #8B7FD9;
+  
+  /* Shadows - Mais suaves e coloridas */
   --shadow-x: 0px;
-  --shadow-y: 1px;
-  --shadow-blur: 2px;
+  --shadow-y: 4px;
+  --shadow-blur: 20px;
   --shadow-spread: 0px;
-  --shadow-opacity: 0.05;
-  --shadow-color: #000000;
+  --shadow-opacity: 0.08;
+  --shadow-color: #8B7FD9;
 }
 
 .dark {
@@ -160,5 +205,43 @@
   }
   body {
     @apply bg-background text-foreground;
+    font-size: 16px;
+    line-height: 1.6;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-weight: 600;
+    line-height: 1.3;
+  }
+}
+
+/* Theo Custom Utilities */
+@layer utilities {
+  .text-theo-purple {
+    color: var(--theo-purple);
+  }
+  
+  .bg-theo-purple {
+    background-color: var(--theo-purple);
+  }
+  
+  .bg-theo-lavanda {
+    background-color: var(--theo-lavanda);
+  }
+  
+  .bg-theo-lavanda-light {
+    background-color: var(--theo-lavanda-light);
+  }
+  
+  .border-theo-lavanda {
+    border-color: var(--theo-lavanda);
+  }
+  
+  .shadow-theo {
+    box-shadow: 0 4px 20px rgba(139, 127, 217, 0.08);
+  }
+  
+  .shadow-theo-lg {
+    box-shadow: 0 10px 40px rgba(139, 127, 217, 0.12);
   }
 }
