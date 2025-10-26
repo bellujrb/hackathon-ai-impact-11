@@ -17,6 +17,11 @@ interface Message {
   id: string
   role: "user" | "assistant"
   content: string
+  meta?: {
+    pdfContent?: string
+    title?: string
+    filename?: string
+  }
 }
 
 interface ChecklistItem {
@@ -128,6 +133,25 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
 
       await simulateStreaming(data.response)
 
+      // If server returned a generated report, attach metadata so UI can offer PDF download
+      if (data.type === 'report-generated') {
+        setMessages((prev) =>
+          prev.map((msg) =>
+            msg.id === assistantMessageId
+              ? {
+                  ...msg,
+                  content: data.response,
+                  meta: {
+                    pdfContent: data.response,
+                    title: data.title || `Relatório`,
+                    filename: `${(data.title || 'relatorio').replace(/[^a-z0-9\-\_]/gi, '_')}.pdf`,
+                  },
+                }
+              : msg
+          )
+        )
+      }
+
       if (data.benefitType && data.checklist) {
         onCreateBenefitRequest(data.benefitType, data.benefitName, data.checklist.items)
       }
@@ -147,6 +171,32 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
       }
       setMessages((prev) => [...prev, errorMessage])
       setIsLoading(false)
+    }
+  }
+
+  const downloadPdfFromText = async (text: string, title?: string, filename?: string) => {
+    try {
+      const res = await fetch('/api/generate-report-pdf', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ title: title || 'Relatório', content: text, filename }),
+      })
+
+      if (!res.ok) {
+        alert('Não foi possível gerar o PDF. Tente novamente.')
+        return
+      }
+
+      const blob = await res.blob()
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = filename || 'relatorio.pdf'
+      a.click()
+      URL.revokeObjectURL(url)
+    } catch (err) {
+      console.error('Erro ao baixar PDF', err)
+      alert('Erro ao gerar PDF')
     }
   }
 
@@ -212,7 +262,21 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                   {message.role === "assistant" ? (
                     <div className="text-sm leading-relaxed text-gray-900 prose prose-sm max-w-none">
                       {message.content ? (
-                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                        <>
+                          <ReactMarkdown>{message.content}</ReactMarkdown>
+
+                          {/* If assistant provided PDF metadata, show download button */}
+                          {message.meta?.pdfContent && (
+                            <div className="mt-3">
+                              <button
+                                onClick={() => downloadPdfFromText(message.meta!.pdfContent!, message.meta!.title, message.meta!.filename)}
+                                className="inline-flex items-center rounded bg-gray-900 text-white px-3 py-1 text-sm"
+                              >
+                                Baixar PDF
+                              </button>
+                            </div>
+                          )}
+                        </>
                       ) : (
                         <div className="flex items-center gap-2 py-2">
                           <div className="h-2 w-2 animate-pulse rounded-full bg-gray-400"></div>
