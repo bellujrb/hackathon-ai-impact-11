@@ -75,13 +75,34 @@ export default function ReportGenerator() {
       alert("Confirme que um profissional habilitado revisará e assinará este relatório antes de copiar ou baixar.")
       return
     }
-    const blob = new Blob([preview], { type: "text/plain;charset=utf-8" })
-    const url = URL.createObjectURL(blob)
-    const a = document.createElement("a")
-    a.href = url
-    a.download = `${childName || "relatorio"}.txt`
-    a.click()
-    URL.revokeObjectURL(url)
+
+    // Ask server to generate PDF and download it
+    ;(async () => {
+      try {
+        const filename = `${(childName || 'relatorio').replace(/[^a-z0-9\-\_]/gi, '_')}.pdf`
+        const res = await fetch('/api/generate-report-pdf', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ title: `Relatório - ${childName || ''}`, content: preview, filename }),
+        })
+
+        if (!res.ok) {
+          alert('Não foi possível gerar o PDF. Tente novamente.')
+          return
+        }
+
+        const blob = await res.blob()
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = filename
+        a.click()
+        URL.revokeObjectURL(url)
+      } catch (err) {
+        console.error('PDF download error', err)
+        alert('Erro ao gerar PDF')
+      }
+    })()
   }
 
   return (
