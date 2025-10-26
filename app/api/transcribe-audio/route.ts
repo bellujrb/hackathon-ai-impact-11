@@ -33,11 +33,15 @@ async function transcribeWithWhisper(audioBuffer: Buffer, mimeType: string = "au
   console.log(`   - Tamanho: ${audioBuffer.length} bytes`)
 
   // Criar FormData para enviar o áudio ao Whisper
+  // IMPORTANTE: Usar MIME type LIMPO (sem codecs) no Blob
   const formData = new FormData()
-  const audioBlob = new Blob([audioBuffer], { type: mimeType })
+  const audioBlob = new Blob([audioBuffer], { type: cleanMimeType })
   formData.append("file", audioBlob, filename)
   formData.append("model", "whisper-1")
   formData.append("language", "pt")
+  
+  console.log(`   - Blob type: ${audioBlob.type}`)
+  console.log(`   - Blob size: ${audioBlob.size} bytes`)
 
   const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
     method: "POST",
