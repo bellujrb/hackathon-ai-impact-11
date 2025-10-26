@@ -406,8 +406,8 @@ Benefícios disponíveis: BPC/LOAS, Passe Livre, Isenção de IPVA, Professor de
 Responda APENAS o texto da mensagem, sem formatação adicional.`
 
           const response = await model.invoke([{ role: "user", content: prompt }])
-          
-          return NextResponse.json({
+
+    return NextResponse.json({
             type: "greeting",
             response: response.content as string,
           })

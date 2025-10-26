@@ -7,6 +7,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { FileText, Upload, ChevronRight, ChevronLeft, CheckCircle2, Clock, Send } from "lucide-react"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import emailjs from "@emailjs/browser"
 import {
   Dialog,
@@ -140,7 +141,8 @@ E-mail: ${formData.applicantEmail}`
   if (submitted) {
     return (
       <div className="flex h-full flex-col bg-white dark:bg-gray-950">
-        <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+        <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 py-4">
+          <SidebarTrigger />
           <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Solicitação Enviada</h1>
         </div>
         <div className="flex-1 overflow-y-auto p-6">
@@ -174,7 +176,8 @@ E-mail: ${formData.applicantEmail}`
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-950">
-      <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+      <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 py-4">
+        <SidebarTrigger />
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Designações Oficiais</h1>
       </div>
 
@@ -197,15 +200,15 @@ E-mail: ${formData.applicantEmail}`
           </Card>
           
           <div className="mb-8">
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between gap-1">
               {[1, 2, 3, 4, 5, 6].map((step) => (
-                <div key={step} className="flex items-center">
-                  <div className={`w-10 h-10 rounded-full flex items-center justify-center font-semibold ${
+                <div key={step} className="flex items-center flex-1">
+                  <div className={`w-8 h-8 sm:w-10 sm:h-10 rounded-full flex items-center justify-center font-semibold text-xs sm:text-sm ${
                     step === currentStep ? "bg-gray-900 dark:bg-gray-700 text-white" : step < currentStep ? "bg-green-600 dark:bg-green-700 text-white" : "bg-gray-200 dark:bg-gray-700 text-gray-600 dark:text-gray-300"
                   }`}>
                     {step < currentStep ? "✓" : step}
                   </div>
-                  {step < 6 && <div className={`w-12 h-1 ${step < currentStep ? "bg-green-600 dark:bg-green-700" : "bg-gray-200 dark:bg-gray-700"}`} />}
+                  {step < 6 && <div className={`flex-1 h-1 min-w-[8px] ${step < currentStep ? "bg-green-600 dark:bg-green-700" : "bg-gray-200 dark:bg-gray-700"}`} />}
                 </div>
               ))}
             </div>
@@ -237,12 +240,12 @@ E-mail: ${formData.applicantEmail}`
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 2: Dados do Solicitante</h2>
                 <div className="space-y-3">
                   <div><Label className="text-gray-900 dark:text-gray-100">Nome Completo *</Label><Input value={formData.applicantName} onChange={(e) => setFormData(prev => ({ ...prev, applicantName: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div><Label className="text-gray-900 dark:text-gray-100">CPF *</Label><Input value={formData.applicantCPF} onChange={(e) => setFormData(prev => ({ ...prev, applicantCPF: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                     <div><Label className="text-gray-900 dark:text-gray-100">RG *</Label><Input value={formData.applicantRG} onChange={(e) => setFormData(prev => ({ ...prev, applicantRG: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   </div>
                   <div><Label className="text-gray-900 dark:text-gray-100">Endereço *</Label><Textarea value={formData.applicantAddress} onChange={(e) => setFormData(prev => ({ ...prev, applicantAddress: e.target.value }))} rows={2} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div><Label className="text-gray-900 dark:text-gray-100">Telefone *</Label><Input value={formData.applicantPhone} onChange={(e) => setFormData(prev => ({ ...prev, applicantPhone: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                     <div><Label className="text-gray-900 dark:text-gray-100">E-mail *</Label><Input value={formData.applicantEmail} onChange={(e) => setFormData(prev => ({ ...prev, applicantEmail: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   </div>
@@ -255,7 +258,7 @@ E-mail: ${formData.applicantEmail}`
                 <h2 className="text-xl font-semibold text-gray-900 dark:text-white">Passo 3: Dados do Beneficiário</h2>
                 <div className="space-y-3">
                   <div><Label className="text-gray-900 dark:text-gray-100">Nome da Criança/Adulto com Autismo *</Label><Input value={formData.beneficiaryName} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryName: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
-                  <div className="grid grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     <div><Label className="text-gray-900 dark:text-gray-100">CPF *</Label><Input value={formData.beneficiaryCPF} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryCPF: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                     <div><Label className="text-gray-900 dark:text-gray-100">RG *</Label><Input value={formData.beneficiaryRG} onChange={(e) => setFormData(prev => ({ ...prev, beneficiaryRG: e.target.value }))} className="dark:bg-gray-900 dark:border-gray-700 dark:text-white" /></div>
                   </div>
@@ -322,16 +325,16 @@ E-mail: ${formData.applicantEmail}`
               </div>
             )}
 
-            <div className="flex items-center justify-between mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <Button variant="outline" onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))} disabled={currentStep === 1} className="gap-2 dark:border-gray-600">
+            <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3 mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <Button variant="outline" onClick={() => setCurrentStep(prev => Math.max(1, prev - 1))} disabled={currentStep === 1} className="gap-2 dark:border-gray-600 w-full sm:w-auto">
                 <ChevronLeft className="h-4 w-4" /> Anterior
               </Button>
               {currentStep < 6 ? (
-                <Button onClick={() => setCurrentStep(prev => Math.min(6, prev + 1))} className="gap-2 bg-theo-purple dark:bg-purple-700 hover:bg-theo-purple-dark dark:hover:bg-purple-800">
+                <Button onClick={() => setCurrentStep(prev => Math.min(6, prev + 1))} className="gap-2 bg-theo-purple dark:bg-purple-700 hover:bg-theo-purple-dark dark:hover:bg-purple-800 w-full sm:w-auto">
                   Próximo <ChevronRight className="h-4 w-4" />
                 </Button>
               ) : (
-                <Button onClick={() => setIsConfirming(true)} disabled={isSubmitting} className="gap-2 bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">
+                <Button onClick={() => setIsConfirming(true)} disabled={isSubmitting} className="gap-2 bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800 w-full sm:w-auto">
                   {isSubmitting ? "Enviando..." : "Enviar Solicitação"}
                 </Button>
               )}
@@ -339,27 +342,27 @@ E-mail: ${formData.applicantEmail}`
           </Card>
 
           <Dialog open={isConfirming} onOpenChange={setIsConfirming}>
-            <DialogContent className="sm:max-w-[525px] dark:bg-gray-800 dark:border-gray-700">
+            <DialogContent className="sm:max-w-[525px] dark:bg-gray-800 dark:border-gray-700 mx-4">
               <DialogHeader>
-                <DialogTitle className="text-gray-900 dark:text-white">Confirmar Envio da Solicitação</DialogTitle>
-                <DialogDescription className="text-gray-600 dark:text-gray-400">
+                <DialogTitle className="text-gray-900 dark:text-white text-lg">Confirmar Envio da Solicitação</DialogTitle>
+                <DialogDescription className="text-gray-600 dark:text-gray-400 text-sm">
                   Sua solicitação será enviada para a <strong className="text-gray-900 dark:text-white">Defensoria Pública</strong> para análise.
                   Revise as informações abaixo antes de confirmar.
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4 text-sm">
                 <div className="space-y-1">
-                  <p className="text-gray-900 dark:text-gray-100"><strong>Para:</strong> {RECIPIENT_EMAIL}</p>
-                  <p className="text-gray-900 dark:text-gray-100"><strong>Assunto:</strong> Solicitação de Apoio Jurídico - {BENEFIT_TYPES.find(b => b.id === formData.benefitType)?.name}</p>
+                  <p className="text-gray-900 dark:text-gray-100 text-sm break-words"><strong>Para:</strong> {RECIPIENT_EMAIL}</p>
+                  <p className="text-gray-900 dark:text-gray-100 text-sm break-words"><strong>Assunto:</strong> Solicitação de Apoio Jurídico - {BENEFIT_TYPES.find(b => b.id === formData.benefitType)?.name}</p>
                 </div>
-                <div className="max-h-60 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 whitespace-pre-wrap text-gray-700 dark:text-gray-300">
-                  <h4 className="font-semibold mb-2 text-base">Visualização do E-mail</h4>
-                  <p>{emailBody}</p>
+                <div className="max-h-60 overflow-y-auto rounded-md border border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900 p-4 whitespace-pre-wrap text-gray-700 dark:text-gray-300 text-xs">
+                  <h4 className="font-semibold mb-2 text-sm">Visualização do E-mail</h4>
+                  <p className="text-xs">{emailBody}</p>
                 </div>
               </div>
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setIsConfirming(false)} className="dark:border-gray-600">Cancelar</Button>
-                <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2 bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800">
+              <DialogFooter className="flex-col sm:flex-row gap-2">
+                <Button variant="outline" onClick={() => setIsConfirming(false)} className="dark:border-gray-600 w-full sm:w-auto">Cancelar</Button>
+                <Button onClick={handleSubmit} disabled={isSubmitting} className="gap-2 bg-green-600 dark:bg-green-700 hover:bg-green-700 dark:hover:bg-green-800 w-full sm:w-auto">
                   {isSubmitting ? "Enviando..." : (<> <Send className="h-4 w-4" /> Confirmar e Enviar </>)}
                 </Button>
               </DialogFooter>

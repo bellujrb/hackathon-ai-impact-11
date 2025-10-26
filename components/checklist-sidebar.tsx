@@ -4,8 +4,9 @@ import { useState } from "react"
 import { Card } from "@/components/ui/card"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Button } from "@/components/ui/button"
-import { CheckCircle2, ChevronDown, ChevronRight, MessageCircle, Trash2, HelpCircle } from "lucide-react"
+import { CheckCircle2, ChevronDown, ChevronRight, MessageCircle, Trash2, HelpCircle, MessageSquare, CheckSquare } from "lucide-react"
 import type { BenefitRequest, ChecklistItem } from "@/app/page"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 
 interface ChecklistSidebarProps {
   benefitRequests: BenefitRequest[]
@@ -14,6 +15,9 @@ interface ChecklistSidebarProps {
   onAskAboutBenefit: (benefit: BenefitRequest) => void
   onDeleteBenefit: (benefit: BenefitRequest) => void
   chatInputValue?: string
+  mobileView?: "chat" | "checklist"
+  onMobileViewChange?: (view: "chat" | "checklist") => void
+  benefitRequestsCount?: number
 }
 
 // REMOVIDO - Função mockada antiga, agora usa o checklist da IA
@@ -241,6 +245,9 @@ export function ChecklistSidebar({
   onAskAboutBenefit,
   onDeleteBenefit,
   chatInputValue = "",
+  mobileView,
+  onMobileViewChange,
+  benefitRequestsCount = 0,
 }: ChecklistSidebarProps) {
   const [checklistStates, setChecklistStates] = useState<Record<string, ChecklistItem[]>>({})
   const [expandedItems, setExpandedItems] = useState<Record<string, string | null>>({})
@@ -285,24 +292,109 @@ export function ChecklistSidebar({
 
   if (benefitRequests.length === 0) {
     return (
-      <aside className="w-96 border-l border-theo-lavanda dark:border-gray-800 bg-theo-lavanda-light dark:bg-gray-900 p-6">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white mb-4">Meus Checklists</h2>
-        <div className="text-center py-12">
-          <div className="mb-4">
-            <CheckCircle2 className="h-12 w-12 text-theo-purple mx-auto opacity-50" />
+      <aside className="w-full md:w-96 border-l border-theo-lavanda dark:border-gray-800 bg-theo-lavanda-light dark:bg-gray-900 flex flex-col h-full">
+        {/* Header with navigation controls */}
+        <div className="border-b border-theo-lavanda dark:border-gray-800 bg-white dark:bg-gray-950">
+          {/* Mobile Header - Full width navigation */}
+          <div className="md:hidden p-4 border-b border-gray-200 dark:border-gray-800">
+            <div className="flex items-center justify-between gap-3">
+              <SidebarTrigger />
+              {mobileView && onMobileViewChange && (
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() => onMobileViewChange("chat")}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                      mobileView === "chat"
+                        ? "bg-theo-purple dark:bg-purple-700 text-white shadow-lg"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    }`}
+                  >
+                    <MessageSquare className="h-4 w-4" />
+                    <span className="font-medium text-sm">Chat</span>
+                  </button>
+                  <button
+                    onClick={() => onMobileViewChange("checklist")}
+                    className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all relative ${
+                      mobileView === "checklist"
+                        ? "bg-theo-purple dark:bg-purple-700 text-white shadow-lg"
+                        : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                    }`}
+                  >
+                    <CheckSquare className="h-4 w-4" />
+                    <span className="font-medium text-sm">List</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
-          <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum checklist ainda.</p>
-          <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Pergunte sobre um benefício no chat para começar.</p>
+
+          {/* Title - Desktop version */}
+          <div className="p-6">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-white">Meus Checklists</h2>
+            <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Acompanhe suas solicitações</p>
+          </div>
+        </div>
+
+        <div className="flex-1 flex items-center justify-center p-6">
+          <div className="text-center">
+            <div className="mb-4">
+              <CheckCircle2 className="h-12 w-12 text-theo-purple mx-auto opacity-50" />
+            </div>
+            <p className="text-sm text-gray-500 dark:text-gray-400">Nenhum checklist ainda.</p>
+            <p className="text-sm text-gray-500 dark:text-gray-400 mt-2">Pergunte sobre um benefício no chat para começar.</p>
+          </div>
         </div>
       </aside>
     )
   }
 
   return (
-    <aside className="w-96 border-l border-theo-lavanda dark:border-gray-800 bg-theo-lavanda-light dark:bg-gray-900 flex flex-col h-full">
-      <div className="p-6 border-b border-theo-lavanda dark:border-gray-800 bg-white dark:bg-gray-950">
-        <h2 className="text-lg font-bold text-gray-900 dark:text-white">Meus Checklists</h2>
-        <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Acompanhe suas solicitações</p>
+    <aside className="w-full md:w-96 border-l border-theo-lavanda dark:border-gray-800 bg-theo-lavanda-light dark:bg-gray-900 flex flex-col h-full">
+      {/* Header with navigation controls */}
+      <div className="border-b border-theo-lavanda dark:border-gray-800 bg-white dark:bg-gray-950">
+        {/* Mobile Header - Full width navigation */}
+        <div className="md:hidden p-4 border-b border-gray-200 dark:border-gray-800">
+          <div className="flex items-center justify-between gap-3">
+            <SidebarTrigger />
+            {mobileView && onMobileViewChange && (
+              <div className="flex items-center gap-2">
+                <button
+                  onClick={() => onMobileViewChange("chat")}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                    mobileView === "chat"
+                      ? "bg-theo-purple dark:bg-purple-700 text-white shadow-lg"
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  <span className="font-medium text-sm">Chat</span>
+                </button>
+                <button
+                  onClick={() => onMobileViewChange("checklist")}
+                  className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all relative ${
+                    mobileView === "checklist"
+                      ? "bg-theo-purple dark:bg-purple-700 text-white shadow-lg"
+                      : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                  }`}
+                >
+                  <CheckSquare className="h-4 w-4" />
+                  <span className="font-medium text-sm">List</span>
+                  {benefitRequestsCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-theo-coral dark:bg-coral-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-xs font-bold">
+                      {benefitRequestsCount}
+                    </span>
+                  )}
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Title - Desktop version */}
+        <div className="p-6">
+          <h2 className="text-lg font-bold text-gray-900 dark:text-white">Meus Checklists</h2>
+          <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">Acompanhe suas solicitações</p>
+        </div>
       </div>
 
       <div className="flex-1 overflow-y-auto p-4 space-y-3">

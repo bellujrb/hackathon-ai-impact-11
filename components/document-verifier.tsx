@@ -8,6 +8,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Upload, FileText, CheckCircle2, XCircle, AlertCircle, Loader2 } from "lucide-react"
 import ReactMarkdown from "react-markdown"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import ReportGenerator from "@/components/report-generator"
 
 export function DocumentVerifier() {
@@ -87,7 +88,8 @@ export function DocumentVerifier() {
 
   return (
     <div className="flex h-full flex-col bg-white dark:bg-gray-950">
-      <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+      <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 py-4">
+        <SidebarTrigger />
         <h1 className="text-xl font-semibold text-gray-900 dark:text-white">Verificador de Documentos</h1>
       </div>
 

@@ -4,7 +4,7 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { Send, X, Scale, FileText, School, DollarSign } from "lucide-react"
+import { Send, X, Scale, FileText, School, DollarSign, MessageSquare, CheckSquare } from "lucide-react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import ReactMarkdown from 'react-markdown'
 import { TheoAvatar } from "@/components/theo-avatar"
@@ -44,9 +44,12 @@ interface ChatInterfaceProps {
   askingAboutBenefit: BenefitRequest | null
   onClearAskingAbout: () => void
   onSetInput?: (text: string) => void // Callback para que outros componentes possam definir o input
+  mobileView?: "chat" | "checklist"
+  onMobileViewChange?: (view: "chat" | "checklist") => void
+  benefitRequestsCount?: number
 }
 
-export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onClearAskingAbout, onSetInput }: ChatInterfaceProps) {
+export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onClearAskingAbout, onSetInput, mobileView, onMobileViewChange, benefitRequestsCount = 0 }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
@@ -259,8 +262,41 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
     <>
       <Toaster position="top-center" />
       <div className="flex h-full flex-col bg-white dark:bg-gray-950">
-        <div className="flex items-center gap-3 border-b border-gray-200 dark:border-gray-800 px-6 py-4">
+        <div className="flex items-center justify-between gap-3 border-b border-gray-200 dark:border-gray-800 px-4 md:px-6 py-4">
           <SidebarTrigger />
+          
+          {/* Mobile Toggle - Only visible on mobile */}
+          {mobileView && onMobileViewChange && (
+            <div className="flex items-center gap-2 md:hidden">
+              <button
+                onClick={() => onMobileViewChange("chat")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all ${
+                  mobileView === "chat"
+                    ? "bg-theo-purple dark:bg-purple-700 text-white shadow-lg"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                }`}
+              >
+                <MessageSquare className="h-4 w-4" />
+                <span className="font-medium text-sm">Chat</span>
+              </button>
+              <button
+                onClick={() => onMobileViewChange("checklist")}
+                className={`flex items-center gap-2 px-3 py-2 rounded-lg transition-all relative ${
+                  mobileView === "checklist"
+                    ? "bg-theo-purple dark:bg-purple-700 text-white shadow-lg"
+                    : "bg-gray-100 dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                }`}
+              >
+                <CheckSquare className="h-4 w-4" />
+                <span className="font-medium text-sm">List</span>
+                {benefitRequestsCount > 0 && (
+                  <span className="absolute -top-1 -right-1 bg-theo-coral dark:bg-coral-500 text-white rounded-full h-4 w-4 flex items-center justify-center text-xs font-bold">
+                    {benefitRequestsCount}
+                  </span>
+                )}
+              </button>
+            </div>
+          )}
         </div>
 
       {/* Messages Area */}
