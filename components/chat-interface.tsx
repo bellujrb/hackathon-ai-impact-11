@@ -93,12 +93,14 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
 
     try {
       // Chamar API para processar com LangGraph/Gemini
+      // send also the last assistant message content as context so the server can handle multi-turn flows
+      const lastAssistant = messages.slice().reverse().find(m => m.role === 'assistant')
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: userInput }),
+        body: JSON.stringify({ message: userInput, lastAssistant: lastAssistant ? lastAssistant.content : null }),
       })
 
       const data = await response.json()

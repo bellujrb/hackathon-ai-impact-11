@@ -8,7 +8,7 @@ export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {
-    const { message } = await req.json()
+  const { message, lastAssistant } = await req.json()
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Message is required" }, { status: 400 })
@@ -22,28 +22,89 @@ export async function POST(req: NextRequest) {
     }
 
     // Verificar se é uma mensagem de laudo ou pergunta sobre benefício
-          const messageLower = message.toLowerCase()
-      const isReportRequest =
-        messageLower.includes("laudo") ||
-        messageLower.includes("diagnóstico") ||
-        messageLower.includes("cid") ||
-        messageLower.includes("tea")
+    const messageLower = message.toLowerCase()
+
+    // Detect explicit request to GENERATE a report (multi-step flow)
+    const isGenerateReportIntent =
+      messageLower.includes("gerar relatório") ||
+      messageLower.includes("gere um relatório") ||
+      messageLower.includes("gerar um relatório") ||
+      messageLower.includes("gere relatório") ||
+      messageLower.includes("gerar laudo") ||
+      messageLower.includes("gere um laudo")
+
+    const isReportRequest =
+      messageLower.includes("laudo") ||
+      messageLower.includes("diagnóstico") ||
+      messageLower.includes("cid") ||
+      messageLower.includes("tea")
+
+    // If the previous assistant message asked for a subject/benefit for the report,
+    // treat the current message as the report target and generate the report.
+    const lastAssistantLower = typeof lastAssistant === 'string' ? lastAssistant.toLowerCase() : ''
+    const assistantAskedReportTarget = lastAssistantLower.includes('sobre qual assunto') || lastAssistantLower.includes('sobre qual benefício') || lastAssistantLower.includes('sobre o que') || lastAssistantLower.includes('sobre qual assunto/benefício')
 
       // Se a mensagem contém "preciso de ajuda" ou é uma pergunta sobre uma etapa específica,
       // não deve criar um novo checklist
       const isHelpRequest = messageLower.includes("preciso de ajuda") || 
                            messageLower.includes("como posso proceder")
 
-      if (isReportRequest && message.length > 200 && !isHelpRequest) {
+    if (isReportRequest && message.length > 200 && !isHelpRequest) {
       // Processar como laudo completo
       const orchestrator = new AmparaOrchestrator(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
       const result = await orchestrator.processReport(message)
-      
+
       return NextResponse.json({
         type: "full-report",
         data: result,
       })
-    } else {
+    }
+
+    // If user explicitly asked to generate a report (initial intent), ask for the target
+    if (isGenerateReportIntent) {
+      return NextResponse.json({
+        type: 'ask-report-target',
+        response: 'Entendi. Sobre qual assunto/benefício você quer que eu gere o relatório? (ex: conseguir um professor de apoio)'
+      })
+    }
+
+    // If assistant previously asked for the report target, now the user answered — generate the report
+    if (assistantAskedReportTarget) {
+      // Determine benefit type from the user's answer
+      const { benefitType, benefitName } = detectBenefitType(message)
+
+      // Create agents
+      const rightsAgent = new RightsSpecialistAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+      const officialWriter = new (await import('@/lib/agents/official-writer')).OfficialWriterAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
+
+      // Fetch available benefits and pick the matching one
+      const benefits = await rightsAgent.identifyApplicableBenefits({
+        cid: null,
+        age: null,
+        supportLevel: null,
+        schoolType: 'nao-informado',
+        observations: '',
+      })
+
+      let mappedBenefitId: string = benefitType
+      if (benefitType === 'apoio-educacional') mappedBenefitId = 'educacao-inclusiva'
+      const benefit = benefits.find(b => b.id === mappedBenefitId) || benefits[0]
+
+      try {
+        const doc = await officialWriter.generateOfficialDocument(benefit, { cid: null, age: null, supportLevel: null, schoolType: 'nao-informado', observations: '' } as any, 'letter')
+
+        return NextResponse.json({
+          type: 'report-generated',
+          response: doc.content,
+          title: doc.title,
+        })
+      } catch (err) {
+        console.error('Error generating report:', err)
+        return NextResponse.json({ type: 'report-generated', response: 'Desculpe, não foi possível gerar o relatório no momento.' })
+      }
+    }
+
+    else {
       // Se for uma solicitação de ajuda (não criar novo checklist)
       const messageLower = message.toLowerCase()
       const isHelpRequest = messageLower.includes("preciso de ajuda")
