@@ -37,6 +37,7 @@ interface ChatInterfaceProps {
 export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onClearAskingAbout, onSetInput }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
+  const [isLoading, setIsLoading] = useState(false)
 
   // Listener para eventos de setChatInput de outros componentes
   useEffect(() => {
@@ -67,6 +68,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
 
     const userInput = input.trim()
     setInput("")
+    setIsLoading(true)
     
     if (askingAboutBenefit) {
       onClearAskingAbout()
@@ -119,6 +121,8 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
       if (data.benefitType && data.checklist) {
         onCreateBenefitRequest(data.benefitType, data.benefitName, data.checklist.items)
       }
+      
+      setIsLoading(false)
     } catch (error) {
       console.error("Error sending message:", error)
       
@@ -132,6 +136,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
         content: "Desculpe, ocorreu um erro. Tente novamente.",
       }
       setMessages((prev) => [...prev, errorMessage])
+      setIsLoading(false)
     }
   }
 
@@ -196,7 +201,15 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                 >
                   {message.role === "assistant" ? (
                     <div className="text-sm leading-relaxed text-gray-900 prose prose-sm max-w-none">
-                      <ReactMarkdown>{message.content}</ReactMarkdown>
+                      {message.content ? (
+                        <ReactMarkdown>{message.content}</ReactMarkdown>
+                      ) : (
+                        <div className="flex items-center gap-2 py-2">
+                          <div className="h-2 w-2 animate-pulse rounded-full bg-gray-400"></div>
+                          <div className="h-2 w-2 animate-pulse rounded-full bg-gray-400" style={{ animationDelay: '0.2s' }}></div>
+                          <div className="h-2 w-2 animate-pulse rounded-full bg-gray-400" style={{ animationDelay: '0.4s' }}></div>
+                        </div>
+                      )}
                     </div>
                   ) : (
                     <p className="text-sm leading-relaxed whitespace-pre-line text-white">
