@@ -40,9 +40,12 @@ export async function POST(req: NextRequest) {
       messageLower.includes("cid") ||
       messageLower.includes("tea")
 
-    // If the message clearly asks for a report AND names a benefit, generate immediately.
-    const directDetect = detectBenefitType(message)
-    if ((messageLower.includes('relat') || messageLower.includes('relatorio') || messageLower.includes('laudo')) && directDetect.benefitType !== 'outros') {
+  // If the message clearly asks for a report AND names a benefit, generate immediately.
+  const directDetect = detectBenefitType(message)
+  // Also treat short replies like "sobre passe livre" as report-target answers when benefit is detected.
+  const isShortReportAnswer = messageLower.startsWith('sobre ') && directDetect.benefitType !== 'outros'
+
+  if (((messageLower.includes('relat') || messageLower.includes('relatorio') || messageLower.includes('laudo')) && directDetect.benefitType !== 'outros') || isShortReportAnswer) {
       try {
         const rightsAgent = new RightsSpecialistAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)
         const officialWriter = new (await import('@/lib/agents/official-writer')).OfficialWriterAgent(process.env.NEXT_PUBLIC_GOOGLE_API_KEY)

@@ -110,7 +110,8 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
         body: JSON.stringify({
           message: userInput,
           lastAssistant: lastAssistant ? lastAssistant.content : null,
-          previousInteractionType: awaitingReportTarget ? 'ask-report-target' : lastAssistantType,
+          // ensure we send an explicit previousInteractionType when available
+          previousInteractionType: lastAssistantType || (awaitingReportTarget ? 'ask-report-target' : null),
         }),
       })
 
