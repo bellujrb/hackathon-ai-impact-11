@@ -3,11 +3,36 @@ import { SpeechClient } from "@google-cloud/speech"
 
 export const maxDuration = 60
 
-// Fallback: usar Gemini para transcrição se Google Speech não estiver disponível
-async function transcribeWithGemini(audioBuffer: Buffer): Promise<string> {
-  // Gemini não suporta áudio direto ainda, então retornamos um placeholder
-  // Em produção, você pode usar Whisper da OpenAI ou outro serviço
-  throw new Error("Google Speech-to-Text credentials not configured")
+// Fallback: usar OpenAI Whisper para transcrição se Google Speech não estiver disponível
+async function transcribeWithWhisper(audioBuffer: Buffer): Promise<string> {
+  const openaiApiKey = process.env.OPENAI_API_KEY
+  
+  if (!openaiApiKey) {
+    throw new Error("Nenhum serviço de transcrição configurado (Google Speech ou OpenAI Whisper)")
+  }
+
+  // Criar FormData para enviar o áudio ao Whisper
+  const formData = new FormData()
+  const audioBlob = new Blob([audioBuffer], { type: "audio/webm" })
+  formData.append("file", audioBlob, "audio.webm")
+  formData.append("model", "whisper-1")
+  formData.append("language", "pt")
+
+  const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
+    method: "POST",
+    headers: {
+      Authorization: `Bearer ${openaiApiKey}`,
+    },
+    body: formData,
+  })
+
+  if (!response.ok) {
+    const error = await response.text()
+    throw new Error(`Erro no Whisper: ${error}`)
+  }
+
+  const data = await response.json()
+  return data.text || ""
 }
 
 export async function POST(req: NextRequest) {
@@ -65,16 +90,26 @@ export async function POST(req: NextRequest) {
 
       } catch (speechError) {
         console.error("Erro ao usar Google Speech-to-Text:", speechError)
-        // Fallback para método alternativo
-        transcription = await transcribeWithGemini(audioBuffer)
+        // Fallback para OpenAI Whisper
+        try {
+          transcription = await transcribeWithWhisper(audioBuffer)
+        } catch (whisperError) {
+          console.error("Erro ao usar OpenAI Whisper:", whisperError)
+          throw new Error("Todos os serviços de transcrição falharão")
+        }
       }
     } else {
-      // Sem credenciais - usar método alternativo ou retornar erro amigável
-      return NextResponse.json({
-        success: false,
-        error: "Serviço de transcrição temporariamente indisponível",
-        fallback: true,
-      }, { status: 503 })
+      // Sem credenciais do Google - tentar OpenAI Whisper como fallback
+      try {
+        transcription = await transcribeWithWhisper(audioBuffer)
+      } catch (whisperError) {
+        console.error("Erro ao usar OpenAI Whisper:", whisperError)
+        return NextResponse.json({
+          success: false,
+          error: "Serviço de transcrição temporariamente indisponível",
+          fallback: true,
+        }, { status: 503 })
+      }
     }
 
     if (!transcription) {
