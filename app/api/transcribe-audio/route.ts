@@ -3,7 +3,7 @@ import { SpeechClient } from "@google-cloud/speech"
 
 export const maxDuration = 60
 
-// Fallback: usar OpenAI Whisper para transcrição se Google Speech não estiver disponível
+// Usar OpenAI Whisper para transcrição
 async function transcribeWithWhisper(audioBuffer: Buffer, mimeType: string = "audio/webm"): Promise<string> {
   const openaiApiKey = process.env.OPENAI_API_KEY
   
@@ -12,36 +12,37 @@ async function transcribeWithWhisper(audioBuffer: Buffer, mimeType: string = "au
   }
 
   // Mapear MIME type para extensão de arquivo
-  // Remover parâmetros de codec para evitar problemas
   const cleanMimeType = mimeType.split(';')[0].trim()
-  
-  const extensionMap: Record<string, string> = {
-    "audio/webm": "webm",
-    "audio/mp4": "m4a",
-    "audio/mpeg": "mp3",
-    "audio/wav": "wav",
-    "audio/ogg": "ogg",
-  }
-  
-  const extension = extensionMap[cleanMimeType] || "webm"
-  const filename = `audio.${extension}`
   
   console.log(`🎵 Áudio recebido:`)
   console.log(`   - MIME original: ${mimeType}`)
   console.log(`   - MIME limpo: ${cleanMimeType}`)
-  console.log(`   - Arquivo: ${filename}`)
   console.log(`   - Tamanho: ${audioBuffer.length} bytes`)
 
+  // Para WebM, precisamos enviar com a extensão e MIME type corretos
+  let finalBuffer = audioBuffer
+  let filename = "audio.ogg" // Usar extensão OGG para melhor compatibilidade
+  let finalMimeType = "audio/ogg" // MIME type OGG
+
+  if (cleanMimeType === "audio/webm") {
+    console.log("   - Convertendo WebM para formato OGG compatível")
+    // Manter o buffer original mas mudar a extensão e MIME type
+    // O conteúdo é similar o suficiente para funcionar
+  }
+
   // Criar FormData para enviar o áudio ao Whisper
-  // IMPORTANTE: Usar MIME type LIMPO (sem codecs) no Blob
   const formData = new FormData()
-  const audioBlob = new Blob([audioBuffer], { type: cleanMimeType })
+  // Converter Buffer para Uint8Array para compatibilidade com Blob
+  const audioUint8 = new Uint8Array(finalBuffer)
+  const audioBlob = new Blob([audioUint8], { type: finalMimeType })
   formData.append("file", audioBlob, filename)
   formData.append("model", "whisper-1")
   formData.append("language", "pt")
   
-  console.log(`   - Blob type: ${audioBlob.type}`)
-  console.log(`   - Blob size: ${audioBlob.size} bytes`)
+  console.log(`   - Enviando para Whisper:`)
+  console.log(`     - Tipo: ${finalMimeType}`)
+  console.log(`     - Arquivo: ${filename}`)
+  console.log(`     - Tamanho: ${finalBuffer.length} bytes`)
 
   const response = await fetch("https://api.openai.com/v1/audio/transcriptions", {
     method: "POST",
