@@ -4,12 +4,14 @@ import { useState, useEffect } from "react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Card } from "@/components/ui/card"
-import { Send, X, Scale, FileText, School, DollarSign, Mic } from "lucide-react"
+import { Send, X, Scale, FileText, School, DollarSign } from "lucide-react"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import ReactMarkdown from 'react-markdown'
 import { TheoAvatar } from "@/components/theo-avatar"
 import { SuggestionCard } from "@/components/suggestion-card"
+import { AudioRecorderButton } from "@/components/audio-recorder-button"
 import { motion } from "framer-motion"
+import { Toaster } from "@/components/ui/sonner"
 
 interface MarkdownComponentProps {
   children: React.ReactNode
@@ -253,10 +255,12 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
   }
 
   return (
-    <div className="flex h-full flex-col bg-white">
-      <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-4">
-        <SidebarTrigger />
-      </div>
+    <>
+      <Toaster position="top-center" />
+      <div className="flex h-full flex-col bg-white">
+        <div className="flex items-center gap-3 border-b border-gray-200 px-6 py-4">
+          <SidebarTrigger />
+        </div>
 
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-6 bg-theo-lavanda-light">
@@ -440,12 +444,18 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                 placeholder="Digite sua pergunta ou pressione o microfone..."
                 className="min-h-[60px] resize-none border-2 border-theo-lavanda rounded-2xl focus:border-theo-purple focus:ring-2 focus:ring-theo-purple/20 pr-12 transition-all"
               />
-              <button
-                className="absolute right-3 top-1/2 -translate-y-1/2 p-2 text-theo-purple hover:bg-theo-lavanda rounded-lg transition-colors"
-                aria-label="Usar microfone"
-              >
-                <Mic className="h-5 w-5" />
-              </button>
+              <div className="absolute right-3 top-1/2 -translate-y-1/2">
+                <AudioRecorderButton
+                  onTranscription={(text) => {
+                    setInput(text)
+                    // Focar no textarea após transcrição
+                    setTimeout(() => {
+                      const textarea = document.querySelector('textarea')
+                      textarea?.focus()
+                    }, 100)
+                  }}
+                />
+              </div>
             </div>
             <Button
               onClick={handleSend}
@@ -457,6 +467,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </>
   )
 }
