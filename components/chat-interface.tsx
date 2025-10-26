@@ -38,6 +38,7 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState("")
   const [isLoading, setIsLoading] = useState(false)
+  const [lastAssistantType, setLastAssistantType] = useState<string | null>(null)
 
   // Listener para eventos de setChatInput de outros componentes
   useEffect(() => {
@@ -100,10 +101,17 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ message: userInput, lastAssistant: lastAssistant ? lastAssistant.content : null }),
+        body: JSON.stringify({ message: userInput, lastAssistant: lastAssistant ? lastAssistant.content : null, previousInteractionType: lastAssistantType }),
       })
 
       const data = await response.json()
+
+      // store the type returned by the API so next turn can be explicit about the interaction
+      if (data && data.type) {
+        setLastAssistantType(data.type)
+      } else {
+        setLastAssistantType(null)
+      }
 
       const simulateStreaming = async (fullText: string) => {
         let currentText = ""

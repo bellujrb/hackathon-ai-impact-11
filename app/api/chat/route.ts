@@ -8,7 +8,7 @@ export const maxDuration = 60
 
 export async function POST(req: NextRequest) {
   try {
-  const { message, lastAssistant } = await req.json()
+  const { message, lastAssistant, previousInteractionType } = await req.json()
 
     if (!message || typeof message !== "string") {
       return NextResponse.json({ error: "Message is required" }, { status: 400 })
@@ -39,10 +39,12 @@ export async function POST(req: NextRequest) {
       messageLower.includes("cid") ||
       messageLower.includes("tea")
 
-    // If the previous assistant message asked for a subject/benefit for the report,
-    // treat the current message as the report target and generate the report.
-    const lastAssistantLower = typeof lastAssistant === 'string' ? lastAssistant.toLowerCase() : ''
-    const assistantAskedReportTarget = lastAssistantLower.includes('sobre qual assunto') || lastAssistantLower.includes('sobre qual benefício') || lastAssistantLower.includes('sobre o que') || lastAssistantLower.includes('sobre qual assunto/benefício')
+  // If the previous assistant message asked for a subject/benefit for the report,
+  // treat the current message as the report target and generate the report.
+  // Prefer an explicit flag from the client (previousInteractionType) when available.
+  const lastAssistantLower = typeof lastAssistant === 'string' ? lastAssistant.toLowerCase() : ''
+  const assistantAskedReportTargetText = lastAssistantLower.includes('sobre qual assunto') || lastAssistantLower.includes('sobre qual benefício') || lastAssistantLower.includes('sobre o que') || lastAssistantLower.includes('sobre qual assunto/benefício')
+  const assistantAskedReportTarget = (typeof previousInteractionType === 'string' && previousInteractionType === 'ask-report-target') || assistantAskedReportTargetText
 
       // Se a mensagem contém "preciso de ajuda" ou é uma pergunta sobre uma etapa específica,
       // não deve criar um novo checklist
