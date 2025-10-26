@@ -10,6 +10,7 @@ interface UseAudioRecorderReturn {
   startRecording: () => Promise<void>
   stopRecording: () => Promise<Blob | null>
   cancelRecording: () => void
+  resetState: () => void
   error: string | null
 }
 
@@ -35,10 +36,24 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
         } 
       })
 
-      // Criar MediaRecorder
-      const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
-        ? 'audio/webm;codecs=opus'
-        : 'audio/webm'
+      // Criar MediaRecorder com formato compatível com Whisper
+      // FORÇAR WEBM porque é o mais compatível com OpenAI Whisper
+      let mimeType = 'audio/webm' // Default mais seguro
+      
+      // Tentar webm com opus (melhor qualidade)
+      if (MediaRecorder.isTypeSupported('audio/webm;codecs=opus')) {
+        mimeType = 'audio/webm;codecs=opus'
+      } 
+      // Fallback para webm puro
+      else if (MediaRecorder.isTypeSupported('audio/webm')) {
+        mimeType = 'audio/webm'
+      }
+      // Se NADA funcionar, tentar wav
+      else if (MediaRecorder.isTypeSupported('audio/wav')) {
+        mimeType = 'audio/wav'
+      }
+      
+      console.log('🎤 Using audio format:', mimeType)
       
       const mediaRecorder = new MediaRecorder(stream, { mimeType })
       mediaRecorderRef.current = mediaRecorder
@@ -124,12 +139,19 @@ export function useAudioRecorder(): UseAudioRecorderReturn {
     setError(null)
   }, [])
 
+  const resetState = useCallback(() => {
+    setRecordingState("idle")
+    setRecordingTime(0)
+    setError(null)
+  }, [])
+
   return {
     recordingState,
     recordingTime,
     startRecording,
     stopRecording,
     cancelRecording,
+    resetState,
     error,
   }
 }

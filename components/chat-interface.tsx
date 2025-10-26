@@ -10,6 +10,7 @@ import ReactMarkdown from 'react-markdown'
 import { TheoAvatar } from "@/components/theo-avatar"
 import { SuggestionCard } from "@/components/suggestion-card"
 import { AudioRecorderButton } from "@/components/audio-recorder-button"
+import { TextToSpeechButton } from "@/components/text-to-speech-button"
 import { motion } from "framer-motion"
 import { Toaster } from "@/components/ui/sonner"
 
@@ -356,9 +357,12 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                         <>
                           <ReactMarkdown>{message.content}</ReactMarkdown>
 
-                          {/* If assistant provided PDF metadata, show download button */}
-                          {(message.meta?.pdfContent || message.meta?.pdfBase64) && (
-                            <div className="mt-3">
+                          {/* Botão para ouvir a resposta do Theo */}
+                          <div className="mt-3 flex items-center gap-2">
+                            <TextToSpeechButton text={message.content} />
+                            
+                            {/* If assistant provided PDF metadata, show download button */}
+                            {(message.meta?.pdfContent || message.meta?.pdfBase64) && (
                               <button
                                 onClick={() => {
                                   if (message.meta?.pdfBase64) {
@@ -371,8 +375,8 @@ export function ChatInterface({ onCreateBenefitRequest, askingAboutBenefit, onCl
                               >
                                 Baixar PDF
                               </button>
-                            </div>
-                          )}
+                            )}
+                          </div>
                         </>
                       ) : (
                         <div className="flex items-center gap-2 py-2">
