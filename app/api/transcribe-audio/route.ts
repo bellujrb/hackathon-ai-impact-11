@@ -12,28 +12,25 @@ async function transcribeWithWhisper(audioBuffer: Buffer, mimeType: string = "au
   }
 
   // Mapear MIME type para extensão de arquivo
+  // Remover parâmetros de codec para evitar problemas
+  const cleanMimeType = mimeType.split(';')[0].trim()
+  
   const extensionMap: Record<string, string> = {
     "audio/webm": "webm",
     "audio/mp4": "m4a",
-    "audio/mp4;codecs=opus": "m4a",  // MP4 com Opus → m4a
     "audio/mpeg": "mp3",
     "audio/wav": "wav",
     "audio/ogg": "ogg",
-    "audio/webm;codecs=opus": "webm",
   }
   
-  // Extração de extensão: verificar se tem codec e usar base do MIME type
-  let extension = extensionMap[mimeType]
-  
-  if (!extension) {
-    // Tentar extrair tipo base (antes do ;)
-    const baseType = mimeType.split(';')[0].trim()
-    extension = extensionMap[baseType] || "webm"
-  }
-  
+  const extension = extensionMap[cleanMimeType] || "webm"
   const filename = `audio.${extension}`
   
-  console.log(`Enviando para Whisper: ${filename} (${mimeType})`)
+  console.log(`🎵 Áudio recebido:`)
+  console.log(`   - MIME original: ${mimeType}`)
+  console.log(`   - MIME limpo: ${cleanMimeType}`)
+  console.log(`   - Arquivo: ${filename}`)
+  console.log(`   - Tamanho: ${audioBuffer.length} bytes`)
 
   // Criar FormData para enviar o áudio ao Whisper
   const formData = new FormData()
@@ -75,11 +72,10 @@ export async function POST(req: NextRequest) {
     const arrayBuffer = await audioFile.arrayBuffer()
     const audioBuffer = Buffer.from(arrayBuffer)
     const mimeType = audioFile.type || "audio/webm"
-    
-    console.log(`Áudio recebido: ${audioFile.name}, tipo: ${mimeType}, tamanho: ${audioBuffer.length} bytes`)
 
     // Validar tamanho do áudio
     if (audioBuffer.length === 0) {
+      console.error("❌ Áudio vazio recebido")
       return NextResponse.json({
         success: false,
         error: "Áudio vazio. Por favor, grave novamente.",
@@ -87,6 +83,7 @@ export async function POST(req: NextRequest) {
     }
     
     if (audioBuffer.length < 100) {
+      console.error("❌ Áudio muito curto:", audioBuffer.length, "bytes")
       return NextResponse.json({
         success: false,
         error: "Áudio muito curto. Fale por mais tempo.",
@@ -98,8 +95,9 @@ export async function POST(req: NextRequest) {
     // Usar OpenAI Whisper diretamente (mais confiável e simples)
     try {
       transcription = await transcribeWithWhisper(audioBuffer, mimeType)
+      console.log("✅ Transcrição bem-sucedida:", transcription.substring(0, 50) + "...")
     } catch (whisperError) {
-      console.error("Erro ao usar OpenAI Whisper:", whisperError)
+      console.error("❌ Erro ao usar OpenAI Whisper:", whisperError)
       
       // Se Whisper falhar, tentar Google Speech como fallback
       const privateKey = process.env.GOOGLE_CLOUD_PRIVATE_KEY?.split(String.raw`\n`).join("\n")
