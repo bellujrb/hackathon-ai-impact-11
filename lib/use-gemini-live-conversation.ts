@@ -56,13 +56,17 @@ export function useGeminiLiveConversation({
       // Iniciar gravação de áudio
       await startRecording()
       
-      // Iniciar captura de frames de vídeo (1 frame por segundo)
+      // Iniciar captura de frames de vídeo (2 frames por segundo para real-time)
       frameIntervalRef.current = setInterval(() => {
         const frame = captureVideoFrame()
         if (frame) {
           videoFramesRef.current.push(frame)
+          // Manter apenas últimos 6 frames (3 segundos de contexto)
+          if (videoFramesRef.current.length > 6) {
+            videoFramesRef.current.shift()
+          }
         }
-      }, 1000) // Captura 1 frame/segundo para reduzir dados
+      }, 500) // Captura 2 frames/segundo para melhor real-time
       
     } catch (err) {
       console.error("Erro ao iniciar gravação:", err)
@@ -119,7 +123,7 @@ export function useGeminiLiveConversation({
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: userMessage,
-          images: videoFrames.slice(-3), // Enviar últimos 3 frames como contexto
+          images: videoFrames.slice(-4), // Enviar últimos 4 frames para melhor contexto real-time
         }),
       })
 

@@ -95,38 +95,45 @@ export function LiveMode({ isOpen, onClose }: LiveModeProps) {
 
           {/* Content */}
           <div className="flex-1 overflow-y-auto p-6 flex flex-col items-center">
-            {/* Layout: Webcam + Avatar */}
+            {/* Layout: Webcam grande + Avatar pequeno sobreposto */}
             <motion.div
-              className="mb-8 w-full max-w-5xl grid grid-cols-2 gap-6"
+              className="mb-8 w-full max-w-4xl relative"
               initial={{ y: -20, opacity: 0 }}
               animate={{ y: 0, opacity: 1 }}
               transition={{ delay: 0.2 }}
             >
-              {/* Webcam Preview */}
-              <div className="flex flex-col items-center">
+              {/* Webcam Preview - Grande */}
+              <div className="relative w-full">
                 <VideoPreview
                   videoRef={videoRef}
                   isStreaming={isStreaming}
                   isRecording={conversationState === "listening"}
-                  className="w-full aspect-video max-w-md"
+                  className="w-full aspect-video"
                 />
-                <p className="mt-3 text-sm text-gray-600 font-medium">
+                <p className="absolute bottom-4 left-4 bg-black/50 backdrop-blur-sm text-white px-3 py-1.5 rounded-full text-sm font-medium">
                   Você
                 </p>
                 {webcamError && (
-                  <p className="mt-2 text-xs text-red-600">
+                  <p className="absolute bottom-4 right-4 bg-red-500/90 text-white px-3 py-1.5 rounded-full text-xs">
                     {webcamError}
                   </p>
                 )}
               </div>
 
-              {/* Avatar do Theo */}
-              <div className="flex flex-col items-center justify-center">
-                <TheoLiveAvatar isTalking={isTalking} size="xl" />
-                <p className="mt-3 text-sm text-gray-600 font-medium">
+              {/* Avatar do Theo - Pequeno, sobreposto no canto */}
+              <motion.div
+                className="absolute bottom-6 right-6 flex flex-col items-center"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.4, type: "spring" }}
+              >
+                <div className="relative bg-white rounded-full p-2 shadow-2xl border-4 border-theo-purple/30">
+                  <TheoLiveAvatar isTalking={isTalking} size="md" />
+                </div>
+                <p className="mt-2 text-xs text-white font-semibold bg-theo-purple px-3 py-1 rounded-full shadow-lg">
                   Theo
                 </p>
-              </div>
+              </motion.div>
             </motion.div>
 
             {/* Status Indicator */}
